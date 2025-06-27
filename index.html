@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar System Calculator</title>
+    <title>Solar System Calculator & Visualizer</title>
     <style>
         :root {
             --primary-color: #005a9e;
@@ -137,12 +137,65 @@
             border-radius: 5px;
             margin-top: 15px;
         }
+
+        /* --- NEW STYLES FOR VISUALIZATION --- */
+        .diagram-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .diagram-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .diagram-label {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--primary-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            text-align: center;
+            transform: translate(-50%, -50%); /* Center the label on its coordinates */
+        }
+
+        #label-panels {
+            top: 25%;
+            left: 45%;
+        }
+
+        #label-inverter {
+            top: 72%;
+            left: 55%;
+        }
+
+        #label-battery {
+            top: 85%;
+            left: 80%;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Solar System Performance & Load Simulator</h1>
+    <h1>Solar System Performance & Visualizer</h1>
+
+    <!-- SECTION 0: VISUALIZATION -->
+    <div class="card">
+        <h2>System Visualization</h2>
+        <div class="diagram-container">
+            <img src="https://i.ibb.co/6PqjXf9/solar-system-diagram.png" alt="Diagram of a solar energy system with panels, inverter, and battery.">
+            <div id="label-panels" class="diagram-label"></div>
+            <div id="label-inverter" class="diagram-label"></div>
+            <div id="label-battery" class="diagram-label"></div>
+        </div>
+    </div>
 
     <!-- SECTION 1: Solar Panel Configuration -->
     <div class="card">
@@ -309,6 +362,11 @@ const panelsSeriesInput = document.getElementById('panels-series');
 const stringsParallelInput = document.getElementById('strings-parallel');
 const inverterSelect = document.getElementById('inverter-select');
 const batteryModulesInput = document.getElementById('battery-modules');
+// New elements for visualization labels
+const labelPanels = document.getElementById('label-panels');
+const labelInverter = document.getElementById('label-inverter');
+const labelBattery = document.getElementById('label-battery');
+
 
 // --- EVENT LISTENERS ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -408,25 +466,19 @@ function calculateAll() {
     balanceTableBody.innerHTML = '';
 
     DataLibrary.kalamataClimate.forEach((month, index) => {
-        // a. Calculate Heat Pump Demand for the month
         let dailyDemandKWh = 0;
         if (month.dailyLow < HEATING_SETPOINT) {
-            // Simple model: run hours proportional to how cold it is
-            const dailyRunHours = (HEATING_SETPOINT - month.dailyLow) / 5 * 6; // Heuristic
+            const dailyRunHours = (HEATING_SETPOINT - month.dailyLow) / 5 * 6;
             dailyDemandKWh += dailyRunHours * heatPump.minHeatingPowerKW;
         }
         if (month.dailyHigh > COOLING_SETPOINT) {
-            // Simple model: run hours proportional to how hot it is
-            const dailyRunHours = (month.dailyHigh - COOLING_SETPOINT) / 5 * 4; // Heuristic
+            const dailyRunHours = (month.dailyHigh - COOLING_SETPOINT) / 5 * 4;
             dailyDemandKWh += dailyRunHours * heatPump.minCoolingPowerKW;
         }
         const monthlyDemandKWh = dailyDemandKWh * month.days;
         const monthlySolarGen = monthlyProductions[index];
 
-        // b. Simulate energy flow for an average day in the month
         const dailySolarGen = monthlySolarGen / month.days;
-        
-        // Assume 50% of load happens during solar production hours
         const loadDuringDay = dailyDemandKWh * 0.5;
         const loadDuringNight = dailyDemandKWh * 0.5;
         
@@ -437,9 +489,8 @@ function calculateAll() {
         let energyToBattery = Math.min(excessSolar, usableBatteryCapacity);
         let energyFromBattery = Math.min(loadDuringNight + remainingDayLoad, energyToBattery * BATTERY_EFFICIENCY);
         
-        let gridImport = (loadDuringNight + remainingDayLoad) - energyFromBattery;
+        let gridImport = Math.max(0, (loadDuringNight + remainingDayLoad) - energyFromBattery);
         
-        // c. Scale up to monthly values
         const monthlyDirectUse = solarUsedDirectly * month.days;
         const monthlyFromBattery = energyFromBattery * month.days;
         const monthlyFromGrid = gridImport * month.days;
@@ -454,6 +505,11 @@ function calculateAll() {
             <td>${monthlyFromGrid.toFixed(0)}</td>
         `;
     });
+
+    // --- 4. UPDATE VISUALIZATION LABELS ---
+    labelPanels.innerHTML = `<strong>${(totalPower/1000).toFixed(2)} kWp Array</strong><br>${seriesCount}S x ${parallelCount}P`;
+    labelInverter.innerHTML = `<strong>Inverter</strong><br>${selectedInverter.id}`;
+    labelBattery.innerHTML = `<strong>Battery</strong><br>${totalBatteryCapacity.toFixed(1)} kWh`;
 }
 </script>
 
