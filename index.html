@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar System Calculator</title>
+    <style>
+        :root {
+            --primary-color: #005a9e;
+            --secondary-color: #fdb813;
+            --bg-color: #f4f4f9;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --error-color: #dc3545;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid var(--primary-color);
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .result-item {
+            background-color: var(--bg-color);
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .result-item .label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .result-item .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        tr:nth-child(even) {
+            background-color: var(--bg-color);
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .status-ok { background-color: var(--success-color); }
+        .status-warn { background-color: var(--warning-color); color: #333; }
+        .status-error { background-color: var(--error-color); }
+
+        .note {
+            font-size: 0.9em;
+            color: #555;
+            background-color: #eef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Solar System Performance & Load Simulator</h1>
+
+    <!-- SECTION 1: Solar Panel Configuration -->
+    <div class="card">
+        <h2>1. Solar Array Configuration</h2>
+        <div class="form-group">
+            <label for="panel-select">Solar Panel Model</label>
+            <select id="panel-select"></select>
+        </div>
+        <div class="form-group">
+            <label for="panels-series">Panels in Series</label>
+            <input type="number" id="panels-series" value="10" min="1">
+        </div>
+        <div class="form-group">
+            <label for="strings-parallel">Strings in Parallel</label>
+            <input type="number" id="strings-parallel" value="1" min="1">
+        </div>
+
+        <h3>Array Electrical Characteristics</h3>
+        <div class="results-grid">
+            <div class="result-item">
+                <div class="label">Total Panels</div>
+                <div class="value" id="total-panels">0</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Total Power (kWp)</div>
+                <div class="value" id="total-power">0</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Max Power Voltage (Vmp)</div>
+                <div class="value" id="total-voltage">0 V</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Max Power Current (Imp)</div>
+                <div class="value" id="total-current">0 A</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Open Circuit Voltage (Voc)</div>
+                <div class="value" id="total-oc-voltage">0 V</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: Inverter & Production -->
+    <div class="card">
+        <h2>2. Inverter & Projected Production</h2>
+        <div class="form-group">
+            <label for="inverter-select">Inverter Model</label>
+            <select id="inverter-select"></select>
+        </div>
+        <h3>Inverter Compatibility</h3>
+        <p id="inverter-status"></p>
+
+        <h3>Projected Monthly Generation (Kalamata, Greece)</h3>
+        <table id="production-table">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Avg. Daily Sun (kWh/m²)</th>
+                    <th>Projected Monthly Output (kWh)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+         <div class="note">
+            <strong>Note:</strong> Production is estimated using a standard Performance Ratio (PR) of <strong>80%</strong> to account for real-world losses (temperature, dirt, wiring, inverter efficiency, etc.).
+        </div>
+    </div>
+    
+    <!-- SECTION 3: Battery & Load Simulation -->
+    <div class="card">
+        <h2>3. Battery & Heat Pump Load Simulation</h2>
+        <div class="form-group">
+            <label for="battery-modules">Battery Modules (15.5 kWh each)</label>
+            <input type="number" id="battery-modules" value="1" min="0">
+        </div>
+        <h3>Battery Capacity & Load Runtime</h3>
+        <div class="results-grid">
+            <div class="result-item">
+                <div class="label">Total Battery Capacity</div>
+                <div class="value" id="battery-capacity">0 kWh</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Heat Pump Runtime (Heating)</div>
+                <div class="value" id="runtime-heating">0 hrs</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Heat Pump Runtime (Cooling)</div>
+                <div class="value" id="runtime-cooling">0 hrs</div>
+            </div>
+        </div>
+
+        <h3>Monthly Energy Balance Simulation</h3>
+        <table id="balance-table">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Solar Gen (kWh)</th>
+                    <th>HP Demand (kWh)</th>
+                    <th>Direct Solar Use (kWh)</th>
+                    <th>From Battery (kWh)</th>
+                    <th>From Grid (kWh)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div class="note">
+            <strong>Assumptions:</strong>
+            <ul>
+                <li>Heat pump heating is needed when daily low < 18°C.</li>
+                <li>Heat pump cooling is needed when daily high > 24°C.</li>
+                <li>Run hours are estimated based on temperature difference from setpoints.</li>
+                <li>Energy is prioritized: 1. Direct Solar Use, 2. Battery Discharge, 3. Grid Import.</li>
+                <li>Battery has a 90% Depth of Discharge (DoD) and 95% round-trip efficiency.</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// --- DATA LIBRARY (Converted from Swift) ---
+
+const DataLibrary = {
+    panels: [
+        { name: "JKM435N-54HL4R-V", power: 435.0, moduleEfficiency: 0.2177, width: 1.134, height: 1.762, cellRows: 18, cellColumns: 6, weight: 26.0, openCircuitVoltage: 39.16, maxPowerVoltage: 32.59, shortCircuitCurrent: 13.80, maxPowerCurrent: 13.35 },
+        { name: "Longi LR5-54HPB-410M", power: 410.0, moduleEfficiency: 0.210, width: 1.134, height: 1.722, cellRows: 18, cellColumns: 6, weight: 24.5, openCircuitVoltage: 37.25, maxPowerVoltage: 31.25, shortCircuitCurrent: 13.87, maxPowerCurrent: 13.12 }
+    ],
+    inverters: [
+        { id: "EM5500-48L", ratedPower: 5500, maxPVArrayPower: 5500, maxPVVoltage: 500, mpptMinVoltage: 120, mpptMaxVoltage: 500, maxChargingCurrent: 100 },
+        { id: "EM3500-24L", ratedPower: 3500, maxPVArrayPower: 1500, maxPVVoltage: 160, mpptMinVoltage: 30, mpptMaxVoltage: 160, maxChargingCurrent: 100 }
+    ],
+    kalamataIrradiance: [
+        { name: "January", avgDailyKWhPerM2: 2.5 }, { name: "February", avgDailyKWhPerM2: 3.3 },
+        { name: "March", avgDailyKWhPerM2: 4.7 }, { name: "April", avgDailyKWhPerM2: 6.1 },
+        { name: "May", avgDailyKWhPerM2: 7.1 }, { name: "June", avgDailyKWhPerM2: 7.9 },
+        { name: "July", avgDailyKWhPerM2: 7.9 }, { name: "August", avgDailyKWhPerM2: 7.0 },
+        { name: "September", avgDailyKWhPerM2: 5.6 }, { name: "October", avgDailyKWhPerM2: 4.0 },
+        { name: "November", avgDailyKWhPerM2: 2.7 }, { name: "December", avgDailyKWhPerM2: 2.2 }
+    ],
+    kalamataClimate: [
+        { name: "January", days: 31, dailyHigh: 15.2, dailyLow: 5.6 },
+        { name: "February", days: 28, dailyHigh: 15.6, dailyLow: 5.8 },
+        { name: "March", days: 31, dailyHigh: 17.3, dailyLow: 6.8 },
+        { name: "April", days: 30, dailyHigh: 20.1, dailyLow: 9.0 },
+        { name: "May", days: 31, dailyHigh: 24.4, dailyLow: 12.4 },
+        { name: "June", days: 30, dailyHigh: 28.8, dailyLow: 15.9 },
+        { name: "July", days: 31, dailyHigh: 31.2, dailyLow: 18.2 },
+        { name: "August", days: 31, dailyHigh: 31.2, dailyLow: 18.3 },
+        { name: "September", days: 30, dailyHigh: 28.8, dailyLow: 16.2 },
+        { name: "October", days: 31, dailyHigh: 24.6, dailyLow: 13.1 },
+        { name: "November", days: 30, dailyHigh: 20.5, dailyLow: 9.8 },
+        { name: "December", days: 31, dailyHigh: 16.7, dailyLow: 7.2 }
+    ],
+    defaultHeatPump: {
+        modelName: "AWH-M120/5R1",
+        minCoolingPowerKW: 0.85,
+        minHeatingPowerKW: 0.75
+    }
+};
+
+// --- DOM ELEMENTS ---
+const panelSelect = document.getElementById('panel-select');
+const panelsSeriesInput = document.getElementById('panels-series');
+const stringsParallelInput = document.getElementById('strings-parallel');
+const inverterSelect = document.getElementById('inverter-select');
+const batteryModulesInput = document.getElementById('battery-modules');
+
+// --- EVENT LISTENERS ---
+document.addEventListener('DOMContentLoaded', () => {
+    populateDropdowns();
+    addEventListeners();
+    calculateAll();
+});
+
+function populateDropdowns() {
+    DataLibrary.panels.forEach((panel, index) => {
+        const option = new Option(`${panel.name} (${panel.power}W)`, index);
+        panelSelect.add(option);
+    });
+    DataLibrary.inverters.forEach((inverter, index) => {
+        const option = new Option(`${inverter.id} (${inverter.ratedPower}W)`, index);
+        inverterSelect.add(option);
+    });
+}
+
+function addEventListeners() {
+    [panelSelect, panelsSeriesInput, stringsParallelInput, inverterSelect, batteryModulesInput].forEach(el => {
+        el.addEventListener('change', calculateAll);
+        el.addEventListener('keyup', calculateAll);
+    });
+}
+
+// --- MAIN CALCULATION FUNCTION ---
+function calculateAll() {
+    // Get selected models and inputs
+    const selectedPanel = DataLibrary.panels[panelSelect.value];
+    const seriesCount = parseInt(panelsSeriesInput.value) || 0;
+    const parallelCount = parseInt(stringsParallelInput.value) || 0;
+    const selectedInverter = DataLibrary.inverters[inverterSelect.value];
+    const batteryModules = parseInt(batteryModulesInput.value) || 0;
+
+    // --- 1. Panel Array Calculations ---
+    const totalPanels = seriesCount * parallelCount;
+    const totalPower = totalPanels * selectedPanel.power;
+    const totalVmp = seriesCount * selectedPanel.maxPowerVoltage;
+    const totalImp = parallelCount * selectedPanel.maxPowerCurrent;
+    const totalVoc = seriesCount * selectedPanel.openCircuitVoltage;
+    
+    document.getElementById('total-panels').innerText = totalPanels;
+    document.getElementById('total-power').innerText = (totalPower / 1000).toFixed(2);
+    document.getElementById('total-voltage').innerText = `${totalVmp.toFixed(2)} V`;
+    document.getElementById('total-current').innerText = `${totalImp.toFixed(2)} A`;
+    document.getElementById('total-oc-voltage').innerText = `${totalVoc.toFixed(2)} V`;
+
+    // --- 2. Inverter & Production Calculations ---
+    // Inverter Compatibility Check
+    let statusHtml = '';
+    const powerOk = totalPower <= selectedInverter.maxPVArrayPower;
+    const vmpOk = totalVmp >= selectedInverter.mpptMinVoltage && totalVmp <= selectedInverter.mpptMaxVoltage;
+    const vocOk = totalVoc < selectedInverter.maxPVVoltage;
+
+    statusHtml += `<div>Max Array Power: <span class="status ${powerOk ? 'status-ok' : 'status-error'}">${totalPower.toFixed(0)}W / ${selectedInverter.maxPVArrayPower}W</span></div>`;
+    statusHtml += `<div>MPPT Voltage: <span class="status ${vmpOk ? 'status-ok' : 'status-error'}">${totalVmp.toFixed(1)}V (Range: ${selectedInverter.mpptMinVoltage}-${selectedInverter.mpptMaxVoltage}V)</span></div>`;
+    statusHtml += `<div>Open Circuit Voltage: <span class="status ${vocOk ? 'status-ok' : 'status-error'}">${totalVoc.toFixed(1)}V (Max: ${selectedInverter.maxPVVoltage}V)</span></div>`;
+    document.getElementById('inverter-status').innerHTML = statusHtml;
+
+    // Monthly Production Calculation
+    const performanceRatio = 0.80; // 80%
+    const productionTableBody = document.getElementById('production-table').getElementsByTagName('tbody')[0];
+    productionTableBody.innerHTML = '';
+    const monthlyProductions = [];
+
+    DataLibrary.kalamataIrradiance.forEach((month, index) => {
+        const daysInMonth = DataLibrary.kalamataClimate[index].days;
+        const dailyProduction = (totalPower / 1000) * month.avgDailyKWhPerM2 * performanceRatio;
+        const monthlyProduction = dailyProduction * daysInMonth;
+        monthlyProductions.push(monthlyProduction);
+
+        const row = productionTableBody.insertRow();
+        row.innerHTML = `
+            <td>${month.name}</td>
+            <td>${month.avgDailyKWhPerM2.toFixed(2)}</td>
+            <td>${monthlyProduction.toFixed(1)} kWh</td>
+        `;
+    });
+
+    // --- 3. Battery & Load Simulation ---
+    const BATTERY_MODULE_KWH = 15.5;
+    const BATTERY_DOD = 0.90; // 90% Depth of Discharge
+    const BATTERY_EFFICIENCY = 0.95; // 95% round-trip
+    const totalBatteryCapacity = batteryModules * BATTERY_MODULE_KWH;
+    const usableBatteryCapacity = totalBatteryCapacity * BATTERY_DOD;
+    
+    document.getElementById('battery-capacity').innerText = `${totalBatteryCapacity.toFixed(1)} kWh`;
+    const heatPump = DataLibrary.defaultHeatPump;
+    document.getElementById('runtime-heating').innerText = `${(usableBatteryCapacity / heatPump.minHeatingPowerKW).toFixed(1)} hrs`;
+    document.getElementById('runtime-cooling').innerText = `${(usableBatteryCapacity / heatPump.minCoolingPowerKW).toFixed(1)} hrs`;
+
+    // Monthly Energy Balance
+    const HEATING_SETPOINT = 18; // degrees C
+    const COOLING_SETPOINT = 24; // degrees C
+    const balanceTableBody = document.getElementById('balance-table').getElementsByTagName('tbody')[0];
+    balanceTableBody.innerHTML = '';
+
+    DataLibrary.kalamataClimate.forEach((month, index) => {
+        // a. Calculate Heat Pump Demand for the month
+        let dailyDemandKWh = 0;
+        if (month.dailyLow < HEATING_SETPOINT) {
+            // Simple model: run hours proportional to how cold it is
+            const dailyRunHours = (HEATING_SETPOINT - month.dailyLow) / 5 * 6; // Heuristic
+            dailyDemandKWh += dailyRunHours * heatPump.minHeatingPowerKW;
+        }
+        if (month.dailyHigh > COOLING_SETPOINT) {
+            // Simple model: run hours proportional to how hot it is
+            const dailyRunHours = (month.dailyHigh - COOLING_SETPOINT) / 5 * 4; // Heuristic
+            dailyDemandKWh += dailyRunHours * heatPump.minCoolingPowerKW;
+        }
+        const monthlyDemandKWh = dailyDemandKWh * month.days;
+        const monthlySolarGen = monthlyProductions[index];
+
+        // b. Simulate energy flow for an average day in the month
+        const dailySolarGen = monthlySolarGen / month.days;
+        
+        // Assume 50% of load happens during solar production hours
+        const loadDuringDay = dailyDemandKWh * 0.5;
+        const loadDuringNight = dailyDemandKWh * 0.5;
+        
+        let solarUsedDirectly = Math.min(dailySolarGen, loadDuringDay);
+        let excessSolar = dailySolarGen - solarUsedDirectly;
+        let remainingDayLoad = loadDuringDay - solarUsedDirectly;
+
+        let energyToBattery = Math.min(excessSolar, usableBatteryCapacity);
+        let energyFromBattery = Math.min(loadDuringNight + remainingDayLoad, energyToBattery * BATTERY_EFFICIENCY);
+        
+        let gridImport = (loadDuringNight + remainingDayLoad) - energyFromBattery;
+        
+        // c. Scale up to monthly values
+        const monthlyDirectUse = solarUsedDirectly * month.days;
+        const monthlyFromBattery = energyFromBattery * month.days;
+        const monthlyFromGrid = gridImport * month.days;
+
+        const row = balanceTableBody.insertRow();
+        row.innerHTML = `
+            <td>${month.name}</td>
+            <td>${monthlySolarGen.toFixed(0)}</td>
+            <td>${monthlyDemandKWh.toFixed(0)}</td>
+            <td>${monthlyDirectUse.toFixed(0)}</td>
+            <td>${monthlyFromBattery.toFixed(0)}</td>
+            <td>${monthlyFromGrid.toFixed(0)}</td>
+        `;
+    });
+}
+</script>
+
+</body>
+</html>
