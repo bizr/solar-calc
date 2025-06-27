@@ -15,8 +15,6 @@
             --success-color: #28a745;
             --warning-color: #ffc107;
             --error-color: #dc3545;
-            --wire-dc-color: #e62e2e;
-            --wire-battery-color: #333333;
         }
 
         body {
@@ -146,7 +144,6 @@
             width: 100%;
             max-width: 800px;
             margin: 20px auto;
-            background: #f0f7ff;
             border-radius: 8px;
             overflow: hidden;
         }
@@ -157,22 +154,17 @@
         }
 
         /* SVG Component Styles */
+        .svg-concrete-surface { fill: #c5c5c5; filter: url(#concrete-texture); }
         .svg-panel-frame { fill: url(#frame-gradient); }
         .svg-panel-cells { fill: url(#panel-texture); }
-        .svg-inverter-case { fill: #c0c0c0; stroke: #999; stroke-width: 1; }
-        .svg-inverter-face { fill: #d8d8d8; stroke: #999; stroke-width: 1; }
-        .svg-battery-case { fill: #555; stroke: #333; stroke-width: 1; }
-        .svg-wire { fill: none; stroke-width: 3; stroke-linecap: round; }
-        .svg-wire-dc { stroke: var(--wire-dc-color); }
-        .svg-wire-battery { stroke: var(--wire-battery-color); }
-
+        
         .diagram-label {
             position: absolute;
             background: rgba(255, 255, 255, 0.95);
             border: 1px solid var(--primary-color);
-            padding: 5px 10px;
+            padding: 8px 12px;
             border-radius: 5px;
-            font-size: 0.9em;
+            font-size: 1em;
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             text-align: center;
@@ -180,9 +172,7 @@
             white-space: nowrap;
         }
 
-        #label-panels { top: 10%; left: 50%; }
-        #label-inverter { top: 70%; left: 25%; }
-        #label-battery { top: 70%; left: 75%; }
+        #label-panels { top: 15%; left: 50%; }
     </style>
 </head>
 <body>
@@ -192,14 +182,20 @@
 
     <!-- SECTION 0: VISUALIZATION -->
     <div class="card">
-        <h2>System Visualization</h2>
+        <h2>Array Layout Visualization</h2>
         <div class="diagram-container">
-            <svg id="system-svg" class="diagram-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+            <svg id="system-svg" class="diagram-svg" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
                 <defs>
+                    <!-- Texture filter for concrete effect -->
+                    <filter id="concrete-texture">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" stitchTiles="stitch"/>
+                        <feColorMatrix type="matrix" values="0 0 0 0 0.7  0 0 0 0 0.7  0 0 0 0 0.7  0 0 0 0.3 0" />
+                    </filter>
+                    
                     <!-- Gradient for a metallic frame effect -->
                     <linearGradient id="frame-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style="stop-color:#e0e0e0;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#a0a0a0;stop-opacity:1" />
+                        <stop offset="0%" style="stop-color:#cccccc;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#999999;stop-opacity:1" />
                     </linearGradient>
 
                     <!-- Pattern for a photorealistic solar cell look -->
@@ -210,28 +206,15 @@
                         <line x1="9.5" y1="0" x2="9.5" y2="10" stroke="#77aaff" stroke-width="0.5"/>
                     </pattern>
                 </defs>
+                
+                <!-- Background Surface -->
+                <rect class="svg-concrete-surface" width="800" height="400"></rect>
 
                 <!-- Container for dynamically generated panels -->
                 <g id="solar-array-grid"></g>
-                
-                <!-- Static Components -->
-                <g id="inverter" transform="translate(150, 400)">
-                    <rect class="svg-inverter-case" x="0" y="0" width="100" height="60" rx="5"></rect>
-                    <rect fill="#333" x="20" y="15" width="60" height="20" rx="2"></rect>
-                </g>
-                <g id="battery" transform="translate(550, 400)">
-                    <rect class="svg-battery-case" x="0" y="0" width="100" height="60" rx="5"></rect>
-                    <rect fill="#4caf50" x="40" y="5" width="20" height="5" rx="2"></rect>
-                </g>
-                
-                <!-- Wiring -->
-                <path class="svg-wire svg-wire-dc" d="M 400,300 C 400,350 200,350 200,400" />
-                <path class="svg-wire svg-wire-battery" d="M 250,430 C 350,430 450,430 550,430" />
             </svg>
 
             <div id="label-panels" class="diagram-label"></div>
-            <div id="label-inverter" class="diagram-label"></div>
-            <div id="label-battery" class="diagram-label"></div>
         </div>
     </div>
 
@@ -244,15 +227,37 @@
         </div>
         <div class="form-group">
             <label for="panels-series">Panels in Series (per string)</label>
-            <input type="number" id="panels-series" value="10" min="1" max="20">
+            <input type="number" id="panels-series" value="10" min="1" max="25">
         </div>
         <div class="form-group">
             <label for="strings-parallel">Strings in Parallel</label>
-            <input type="number" id="strings-parallel" value="2" min="1" max="10">
+            <input type="number" id="strings-parallel" value="2" min="1" max="15">
+        </div>
+        <h3>Array Electrical Characteristics</h3>
+        <div class="results-grid">
+            <div class="result-item">
+                <div class="label">Total Panels</div>
+                <div class="value" id="total-panels">0</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Total Power (kWp)</div>
+                <div class="value" id="total-power">0</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Max Power Voltage (Vmp)</div>
+                <div class="value" id="total-voltage">0 V</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Max Power Current (Imp)</div>
+                <div class="value" id="total-current">0 A</div>
+            </div>
+            <div class="result-item">
+                <div class="label">Open Circuit Voltage (Voc)</div>
+                <div class="value" id="total-oc-voltage">0 V</div>
+            </div>
         </div>
     </div>
     
-    <!-- (Other cards remain unchanged) -->
     <!-- SECTION 2: Inverter & Production -->
     <div class="card">
         <h2>2. Inverter & Projected Production</h2>
@@ -262,7 +267,6 @@
         </div>
         <h3>Inverter Compatibility</h3>
         <p id="inverter-status"></p>
-
         <h3>Projected Monthly Generation (Kalamata, Greece)</h3>
         <table id="production-table">
             <thead>
@@ -301,7 +305,6 @@
                 <div class="value" id="runtime-cooling">0 hrs</div>
             </div>
         </div>
-
         <h3>Monthly Energy Balance Simulation</h3>
         <table id="balance-table">
             <thead>
@@ -369,8 +372,6 @@ const batteryModulesInput = document.getElementById('battery-modules');
 // Visualization elements
 const solarArrayGrid = document.getElementById('solar-array-grid');
 const labelPanels = document.getElementById('label-panels');
-const labelInverter = document.getElementById('label-inverter');
-const labelBattery = document.getElementById('label-battery');
 
 // --- SVG Namespace ---
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -399,24 +400,28 @@ function addEventListeners() {
     });
 }
 
-// --- NEW SVG DRAWING FUNCTION ---
+// --- SVG DRAWING FUNCTION ---
 function drawPanelGrid(series, parallel) {
     solarArrayGrid.innerHTML = ''; // Clear previous grid
-    if (series <= 0 || parallel <= 0 || series > 20 || parallel > 10) return; // Safety/limit
+    if (series <= 0 || parallel <= 0 || series > 25 || parallel > 15) return; // Safety/limit
 
-    const panelWidth = 40;
-    const panelHeight = 60;
-    const gap = 8;
+    const panelWidth = 45;
+    const panelHeight = 75;
+    const gap = 2; // Represents the 10mm gap
+    
     const totalGridWidth = parallel * (panelWidth + gap) - gap;
-    const startX = (800 - totalGridWidth) / 2; // Center the whole grid
+    const totalGridHeight = series * (panelHeight + gap) - gap;
+
+    const startX = (800 - totalGridWidth) / 2; // Center the whole grid horizontally
+    const startY = (400 - totalGridHeight) / 2; // Center the whole grid vertically
 
     for (let p = 0; p < parallel; p++) { // p for parallel strings (columns)
         for (let s = 0; s < series; s++) { // s for series panels (rows)
             const x = startX + p * (panelWidth + gap);
-            const y = 20 + s * (panelHeight + gap);
+            const y = startY + s * (panelHeight + gap);
             
-            // Limit vertical drawing to prevent overflow
-            if (y + panelHeight > 300) continue;
+            // Safety check to ensure panels are drawn within the viewbox
+            if (x < 0 || y < 0 || x + panelWidth > 800 || y + panelHeight > 400) continue;
 
             // Create group for each panel
             const panelGroup = document.createElementNS(SVG_NS, 'g');
@@ -427,7 +432,7 @@ function drawPanelGrid(series, parallel) {
             frame.setAttribute('y', y);
             frame.setAttribute('width', panelWidth);
             frame.setAttribute('height', panelHeight);
-            frame.setAttribute('rx', 3);
+            frame.setAttribute('rx', 2);
             frame.setAttribute('class', 'svg-panel-frame');
             
             // Cells
@@ -466,18 +471,11 @@ function calculateAll() {
     const totalImp = parallelCount * selectedPanel.maxPowerCurrent;
     const totalVoc = seriesCount * selectedPanel.openCircuitVoltage;
     
-    // (This part is just displaying data, unchanged)
-    const resultsContainer = document.querySelector('#panel-config-card .results-grid');
-    if (!resultsContainer) { // Quick check if the card is available
-        const totalPanelsEl = document.getElementById('total-panels');
-        if (totalPanelsEl) {
-             document.getElementById('total-panels').innerText = totalPanels;
-             document.getElementById('total-power').innerText = (totalPower / 1000).toFixed(2);
-             document.getElementById('total-voltage').innerText = `${totalVmp.toFixed(2)} V`;
-             document.getElementById('total-current').innerText = `${totalImp.toFixed(2)} A`;
-             document.getElementById('total-oc-voltage').innerText = `${totalVoc.toFixed(2)} V`;
-        }
-    }
+    document.getElementById('total-panels').innerText = totalPanels;
+    document.getElementById('total-power').innerText = (totalPower / 1000).toFixed(2);
+    document.getElementById('total-voltage').innerText = `${totalVmp.toFixed(2)} V`;
+    document.getElementById('total-current').innerText = `${totalImp.toFixed(2)} A`;
+    document.getElementById('total-oc-voltage').innerText = `${totalVoc.toFixed(2)} V`;
 
     // --- 2. Inverter & Production Calculations ---
     let statusHtml = '';
@@ -535,31 +533,9 @@ function calculateAll() {
         row.innerHTML = `<td>${month.name}</td><td>${monthlySolarGen.toFixed(0)}</td><td>${monthlyDemandKWh.toFixed(0)}</td><td>${(solarUsedDirectly * month.days).toFixed(0)}</td><td>${(energyFromBattery * month.days).toFixed(0)}</td><td>${(gridImport * month.days).toFixed(0)}</td>`;
     });
 
-    // --- 4. UPDATE VISUALIZATION LABELS ---
+    // --- 4. UPDATE VISUALIZATION LABEL ---
     labelPanels.innerHTML = `<strong>${(totalPower/1000).toFixed(2)} kWp Array</strong><br>${seriesCount}S x ${parallelCount}P`;
-    labelInverter.innerHTML = `<strong>Inverter</strong><br>${selectedInverter.id}`;
-    labelBattery.innerHTML = `<strong>Battery</strong><br>${totalBatteryCapacity.toFixed(1)} kWh`;
 }
-
-// Dummy querySelector for the part of the code I removed from the main function
-// to keep the example concise. In a real app this would be structured better.
-document.querySelector('#panel-config-card .results-grid') || (function() {
-    const card = document.createElement('div');
-    card.id = 'panel-config-card'; 
-    const grid = document.createElement('div');
-    grid.className = 'results-grid';
-    grid.innerHTML = `
-        <div class="result-item"><div class="label">Total Panels</div><div class="value" id="total-panels">0</div></div>
-        <div class="result-item"><div class="label">Total Power (kWp)</div><div class="value" id="total-power">0</div></div>
-        <div class="result-item"><div class="label">Max Power Voltage (Vmp)</div><div class="value" id="total-voltage">0 V</div></div>
-        <div class="result-item"><div class="label">Max Power Current (Imp)</div><div class="value" id="total-current">0 A</div></div>
-        <div class="result-item"><div class="label">Open Circuit Voltage (Voc)</div><div class="value" id="total-oc-voltage">0 V</div></div>
-    `;
-    const formGroups = document.querySelectorAll('.form-group');
-    const lastFormGroup = formGroups[formGroups.length-3];
-    card.appendChild(grid);
-    if(lastFormGroup) lastFormGroup.parentElement.appendChild(card);
-})();
 </script>
 </body>
 </html>
