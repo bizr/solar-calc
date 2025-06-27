@@ -15,6 +15,8 @@
             --success-color: #28a745;
             --warning-color: #ffc107;
             --error-color: #dc3545;
+            --wire-dc-color: #e62e2e;
+            --wire-battery-color: #333333;
         }
 
         body {
@@ -138,23 +140,35 @@
             margin-top: 15px;
         }
 
-        /* --- NEW STYLES FOR VISUALIZATION --- */
+        /* --- STYLES FOR SVG VISUALIZATION --- */
         .diagram-container {
             position: relative;
             width: 100%;
             max-width: 800px;
             margin: 20px auto;
+            background: #f0f7ff;
+            border-radius: 8px;
         }
 
-        .diagram-container img {
+        .diagram-svg {
             width: 100%;
             height: auto;
-            border-radius: 5px;
         }
+
+        /* SVG Component Styles */
+        .svg-panel { fill: var(--primary-color); stroke: #fff; stroke-width: 2; }
+        .svg-inverter-case { fill: #c0c0c0; stroke: #999; stroke-width: 1; }
+        .svg-inverter-face { fill: #d8d8d8; stroke: #999; stroke-width: 1; }
+        .svg-inverter-screen { fill: #333; }
+        .svg-battery-case { fill: #555; stroke: #333; stroke-width: 1; }
+        .svg-battery-face { fill: #666; stroke: #333; stroke-width: 1; }
+        .svg-wire { fill: none; stroke-width: 4; stroke-linecap: round; }
+        .svg-wire-dc { stroke: var(--wire-dc-color); }
+        .svg-wire-battery { stroke: var(--wire-battery-color); }
 
         .diagram-label {
             position: absolute;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             border: 1px solid var(--primary-color);
             padding: 5px 10px;
             border-radius: 5px;
@@ -162,23 +176,12 @@
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             text-align: center;
-            transform: translate(-50%, -50%); /* Center the label on its coordinates */
+            transform: translate(-50%, -50%);
         }
 
-        #label-panels {
-            top: 25%;
-            left: 45%;
-        }
-
-        #label-inverter {
-            top: 72%;
-            left: 55%;
-        }
-
-        #label-battery {
-            top: 85%;
-            left: 80%;
-        }
+        #label-panels { top: 20%; left: 25%; }
+        #label-inverter { top: 65%; left: 60%; }
+        #label-battery { top: 80%; left: 85%; }
     </style>
 </head>
 <body>
@@ -190,7 +193,34 @@
     <div class="card">
         <h2>System Visualization</h2>
         <div class="diagram-container">
-            <img src="https://i.ibb.co/6PqjXf9/solar-system-diagram.png" alt="Diagram of a solar energy system with panels, inverter, and battery.">
+            <svg class="diagram-svg" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+                <!-- Solar Panels -->
+                <g id="solar-array">
+                    <rect x="50" y="50" width="220" height="110" class="svg-panel" />
+                    <rect x="55" y="55" width="100" height="100" fill="none" stroke="#fff" stroke-width="1" stroke-dasharray="5 5"/>
+                    <rect x="165" y="55" width="100" height="100" fill="none" stroke="#fff" stroke-width="1" stroke-dasharray="5 5"/>
+                </g>
+
+                <!-- Inverter -->
+                <g id="inverter">
+                    <polygon class="svg-inverter-case" points="500,200 550,175 550,275 500,300" />
+                    <polygon class="svg-inverter-face" points="550,175 650,175 650,275 550,275" />
+                    <rect class="svg-inverter-screen" x="575" y="210" width="50" height="25" rx="2" />
+                </g>
+
+                <!-- Battery -->
+                <g id="battery">
+                    <polygon class="svg-battery-case" points="700,290 750,265 750,345 700,370" />
+                    <polygon class="svg-battery-face" points="750,265 800,265 800,345 750,345" />
+                    <polygon class="svg-battery-case" points="700,315 750,290 750,370 700,395" />
+                    <polygon class="svg-battery-face" points="750,290 800,290 800,370 750,370" />
+                </g>
+                
+                <!-- Wiring -->
+                <path class="svg-wire svg-wire-dc" d="M 270,105 C 400,105 450,250 525,250" />
+                <path class="svg-wire svg-wire-battery" d="M 600,275 C 650,275 675,320 725,320" />
+            </svg>
+
             <div id="label-panels" class="diagram-label"></div>
             <div id="label-inverter" class="diagram-label"></div>
             <div id="label-battery" class="diagram-label"></div>
@@ -362,7 +392,7 @@ const panelsSeriesInput = document.getElementById('panels-series');
 const stringsParallelInput = document.getElementById('strings-parallel');
 const inverterSelect = document.getElementById('inverter-select');
 const batteryModulesInput = document.getElementById('battery-modules');
-// New elements for visualization labels
+// Visualization labels
 const labelPanels = document.getElementById('label-panels');
 const labelInverter = document.getElementById('label-inverter');
 const labelBattery = document.getElementById('label-battery');
@@ -416,7 +446,6 @@ function calculateAll() {
     document.getElementById('total-oc-voltage').innerText = `${totalVoc.toFixed(2)} V`;
 
     // --- 2. Inverter & Production Calculations ---
-    // Inverter Compatibility Check
     let statusHtml = '';
     const powerOk = totalPower <= selectedInverter.maxPVArrayPower;
     const vmpOk = totalVmp >= selectedInverter.mpptMinVoltage && totalVmp <= selectedInverter.mpptMaxVoltage;
@@ -427,8 +456,7 @@ function calculateAll() {
     statusHtml += `<div>Open Circuit Voltage: <span class="status ${vocOk ? 'status-ok' : 'status-error'}">${totalVoc.toFixed(1)}V (Max: ${selectedInverter.maxPVVoltage}V)</span></div>`;
     document.getElementById('inverter-status').innerHTML = statusHtml;
 
-    // Monthly Production Calculation
-    const performanceRatio = 0.80; // 80%
+    const performanceRatio = 0.80;
     const productionTableBody = document.getElementById('production-table').getElementsByTagName('tbody')[0];
     productionTableBody.innerHTML = '';
     const monthlyProductions = [];
@@ -449,8 +477,8 @@ function calculateAll() {
 
     // --- 3. Battery & Load Simulation ---
     const BATTERY_MODULE_KWH = 15.5;
-    const BATTERY_DOD = 0.90; // 90% Depth of Discharge
-    const BATTERY_EFFICIENCY = 0.95; // 95% round-trip
+    const BATTERY_DOD = 0.90;
+    const BATTERY_EFFICIENCY = 0.95;
     const totalBatteryCapacity = batteryModules * BATTERY_MODULE_KWH;
     const usableBatteryCapacity = totalBatteryCapacity * BATTERY_DOD;
     
@@ -459,9 +487,8 @@ function calculateAll() {
     document.getElementById('runtime-heating').innerText = `${(usableBatteryCapacity / heatPump.minHeatingPowerKW).toFixed(1)} hrs`;
     document.getElementById('runtime-cooling').innerText = `${(usableBatteryCapacity / heatPump.minCoolingPowerKW).toFixed(1)} hrs`;
 
-    // Monthly Energy Balance
-    const HEATING_SETPOINT = 18; // degrees C
-    const COOLING_SETPOINT = 24; // degrees C
+    const HEATING_SETPOINT = 18;
+    const COOLING_SETPOINT = 24;
     const balanceTableBody = document.getElementById('balance-table').getElementsByTagName('tbody')[0];
     balanceTableBody.innerHTML = '';
 
