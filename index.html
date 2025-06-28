@@ -68,6 +68,9 @@
 </head>
 <body>
     <script>
+        // Force page reload and ensure all functions are properly loaded
+        console.log("Solar Quotation System - Greek Version Loaded");
+        
         const panels = {
             'JKM435N-54HL4R-V': { power: 435, efficiency: 21.77, width: 1.134, height: 1.762, maxVoltage: 32.59, maxCurrent: 13.35, price: 95 },
             'Longi LR5-54HPB-410M': { power: 410, efficiency: 21.0, width: 1.134, height: 1.722, maxVoltage: 31.25, maxCurrent: 13.12, price: 105 }
@@ -242,6 +245,472 @@
                 btn.textContent = originalText;
                 btn.style.background = '#2c5282';
             }
+        }
+
+        function updateEnergyAnalysis() {
+            // This function can be called when house size changes
+            // Currently just a placeholder for future enhancements
+        }
+
+        function calculateEnergyNeeds() {
+            const houseSqm = parseInt(document.getElementById('house-sqm').value) || 120;
+            
+            // Kalamata climate data (°C)
+            const climate = [
+                {name: "Ιαν", days: 31, high: 15.2, low: 5.6},
+                {name: "Φεβ", days: 28, high: 15.6, low: 5.8},
+                {name: "Μάρ", days: 31, high: 17.3, low: 6.8},
+                {name: "Απρ", days: 30, high: 20.1, low: 9.0},
+                {name: "Μάι", days: 31, high: 24.4, low: 12.4},
+                {name: "Ιούν", days: 30, high: 28.8, low: 15.9},
+                {name: "Ιούλ", days: 31, high: 31.2, low: 18.2},
+                {name: "Αύγ", days: 31, high: 31.2, low: 18.3},
+                {name: "Σεπ", days: 30, high: 28.8, low: 16.2},
+                {name: "Οκτ", days: 31, high: 24.6, low: 13.1},
+                {name: "Νοε", days: 30, high: 20.5, low: 9.8},
+                {name: "Δεκ", days: 31, high: 16.7, low: 7.2}
+            ];
+
+            // Heat pump specs - AWH-M120/5R1
+            const heatPump = {
+                nominalHeatingPower: 0.75, // kW at optimal conditions
+                nominalCoolingPower: 0.85, // kW at optimal conditions
+                maxPower: 12.0, // kW maximum draw
+                optimalTempRange: [18, 25] // °C - optimal efficiency range
+            };
+
+            const comfortTemp = 21; // Target indoor temperature
+            const baseLoadPerSqm = 40; // W/m² base thermal load for perfectly insulated house
+            
+            const monthlyData = climate.map(month => {
+                const avgTemp = (month.high + month.low) / 2;
+                const maxTemp = month.high;
+                const minTemp = month.low;
+                const tempDiff = Math.abs(avgTemp - comfortTemp);
+                
+                let mode, baseEfficiency, powerMultiplier, actualPower, efficiency;
+                let calculationSteps = [];
+                
+                if (avgTemp < comfortTemp) {
+                    // HEATING MODE
+                    mode = 'heating';
+                    
+                    // Step 1: Calculate efficiency degradation in cold weather
+                    if (minTemp < 0) {
+                        baseEfficiency = 2.8; // COP drops significantly below 0°C
+                        powerMultiplier = 2.5; // Need much more power in extreme cold
+                    } else if (minTemp < 5) {
+                        baseEfficiency = 3.2; // Reduced COP in cold weather
+                        powerMultiplier = 2.0; // More power needed
+                    } else if (minTemp < 10) {
+                        baseEfficiency = 3.8; // Slightly reduced COP
+                        powerMultiplier = 1.5; // Moderate increase in power
+                    } else {
+                        baseEfficiency = 4.5; // Optimal COP
+                        powerMultiplier = 1.0; // Normal power
+                    }
+                    
+                    actualPower = Math.min(heatPump.nominalHeatingPower * powerMultiplier, heatPump.maxPower);
+                    efficiency = baseEfficiency;
+                    
+                    calculationSteps.push(`🔥 ΘΕΡΜΑΝΣΗ - Μέσος ${avgTemp.toFixed(1)}°C, Ελάχιστος ${minTemp.toFixed(1)}°C`);
+                    calculationSteps.push(`• Συντελεστής COP: ${efficiency} (μειωμένος λόγω κρύου)`);
+                    calculationSteps.push(`• Ισχύς αντλίας: ${actualPower.toFixed(2)} kW (x${powerMultiplier} λόγω συνθηκών)`);
+                    
+                } else {
+                    // COOLING MODE
+                    mode = 'cooling';
+                    
+                    // Step 1: Calculate efficiency degradation in hot weather
+                    if (maxTemp > 38) {
+                        baseEfficiency = 2.5; // EER drops significantly above 38°C
+                        powerMultiplier = 3.0; // Much more power needed in extreme heat
+                    } else if (maxTemp > 35) {
+                        baseEfficiency = 2.8; // Reduced EER in hot weather
+                        powerMultiplier = 2.2; // More power needed
+                    } else if (maxTemp > 30) {
+                        baseEfficiency = 3.2; // Slightly reduced EER
+                        powerMultiplier = 1.6; // Moderate increase
+                    } else {
+                        baseEfficiency = 3.8; // Optimal EER
+                        powerMultiplier = 1.0; // Normal power
+                    }
+                    
+                    actualPower = Math.min(heatPump.nominalCoolingPower * powerMultiplier, heatPump.maxPower);
+                    efficiency = baseEfficiency;
+                    
+                    calculationSteps.push(`❄️ ΨΥΞΗ - Μέσος ${avgTemp.toFixed(1)}°C, Μέγιστος ${maxTemp.toFixed(1)}°C`);
+                    calculationSteps.push(`• Συντελεστής EER: ${efficiency} (μειωμένος λόγω ζέστης)`);
+                    calculationSteps.push(`• Ισχύς αντλίας: ${actualPower.toFixed(2)} kW (x${powerMultiplier} λόγω συνθηκών)`);
+                }
+                
+                // Step 2: Calculate thermal load based on temperature difference
+                const thermalLoadPerSqm = baseLoadPerSqm + (tempDiff * 15); // Extra 15W/m² per degree difference
+                const totalThermalLoad = (thermalLoadPerSqm * houseSqm) / 1000; // Convert to kW
+                
+                calculationSteps.push(`• Θερμικό φορτίο: ${thermalLoadPerSqm.toFixed(0)} W/m² × ${houseSqm} m² = ${totalThermalLoad.toFixed(2)} kW`);
+                
+                // Step 3: Calculate operating hours (heat pump runs to meet thermal load)
+                const maxDailyHours = 24;
+                const requiredHours = Math.min(maxDailyHours, (totalThermalLoad / actualPower) * 24);
+                const actualDailyHours = Math.min(maxDailyHours, requiredHours * 1.2); // 20% safety margin
+                
+                calculationSteps.push(`• Απαιτούμενες ώρες: ${requiredHours.toFixed(1)}h, Πραγματικές: ${actualDailyHours.toFixed(1)}h/ημέρα`);
+                
+                // Step 4: Calculate energy consumption
+                const dailyElectricalConsumption = (actualPower * actualDailyHours) / efficiency; // kWh per day
+                const monthlyElectricalConsumption = dailyElectricalConsumption * month.days;
+                
+                calculationSteps.push(`• Ημερήσια κατανάλωση: ${actualPower.toFixed(2)} kW × ${actualDailyHours.toFixed(1)}h ÷ ${efficiency} = ${dailyElectricalConsumption.toFixed(2)} kWh`);
+                calculationSteps.push(`• Μηνιαία κατανάλωση: ${dailyElectricalConsumption.toFixed(2)} × ${month.days} = ${monthlyElectricalConsumption.toFixed(0)} kWh`);
+                
+                return {
+                    month: month.name,
+                    avgTemp: avgTemp.toFixed(1),
+                    maxTemp: maxTemp.toFixed(1),
+                    minTemp: minTemp.toFixed(1),
+                    mode: mode,
+                    actualPower: actualPower.toFixed(2),
+                    efficiency: efficiency.toFixed(1),
+                    dailyHours: actualDailyHours.toFixed(1),
+                    monthlyConsumption: monthlyElectricalConsumption.toFixed(0),
+                    dailyConsumption: dailyElectricalConsumption.toFixed(2),
+                    thermalLoad: totalThermalLoad.toFixed(2),
+                    calculationSteps: calculationSteps
+                };
+            });
+
+            return monthlyData;
+        }
+
+        function calculateEnergyBalance() {
+            const energyNeeds = calculateEnergyNeeds();
+            
+            // Get current solar system data
+            const panelType = document.getElementById('panel-type').value;
+            const seriesCount = parseInt(document.getElementById('panels-series').value) || 1;
+            const parallelCount = parseInt(document.getElementById('strings-parallel').value) || 1;
+            const batteryCapacity = parseFloat(document.getElementById('battery-capacity').value) || 15.5;
+            
+            const panel = panels[panelType];
+            const totalPanels = seriesCount * parallelCount;
+            const panelArea = panel.width * panel.height;
+            const totalArea = totalPanels * panelArea;
+            
+            // Monthly solar production
+            const monthlyIrradiance = [2.5, 3.3, 4.7, 6.1, 7.1, 7.9, 7.9, 7.0, 5.6, 4.0, 2.7, 2.2];
+            const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            
+            const balanceData = energyNeeds.map((need, index) => {
+                const monthlyProduction = Math.round(totalArea * monthlyIrradiance[index] * daysInMonth[index] * (panel.efficiency / 100));
+                const consumption = parseInt(need.monthlyConsumption);
+                
+                // Simple energy balance calculation
+                const directFromSolar = Math.min(consumption * 0.7, monthlyProduction * 0.6); // 60% during day
+                const fromBattery = Math.min(consumption * 0.2, batteryCapacity * 20); // Battery cycling
+                const fromGrid = Math.max(0, consumption - directFromSolar - fromBattery);
+                const excessToGrid = Math.max(0, monthlyProduction - directFromSolar - (fromBattery * 1.2));
+                
+                return {
+                    month: need.month,
+                    production: monthlyProduction,
+                    consumption: consumption,
+                    directSolar: Math.round(directFromSolar),
+                    battery: Math.round(fromBattery),
+                    grid: Math.round(fromGrid),
+                    excess: Math.round(excessToGrid),
+                    mode: need.mode,
+                    avgTemp: need.avgTemp
+                };
+            });
+            
+            return balanceData;
+        }
+
+        function showEnergyPlot() {
+            // Force recalculation to avoid any caching issues
+            const balanceData = calculateEnergyBalance();
+            const houseSqm = document.getElementById('house-sqm').value;
+            
+            // Debug log to console to verify calculations
+            console.log("=== DEBUG: Energy Balance Data ===");
+            balanceData.forEach(month => {
+                console.log(`${month.month}: Prod=${month.production}, Cons=${month.consumption}, Grid=${month.grid}%`);
+            });
+            
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); z-index: 10000; display: flex; 
+                align-items: center; justify-content: center; padding: 20px;
+            `;
+            
+            // Create modal content
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white; border-radius: 12px; max-width: 1200px; width: 100%; 
+                max-height: 90vh; overflow-y: auto; position: relative;
+            `;
+            
+            content.innerHTML = `
+                <div style="padding: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #2c5282; padding-bottom: 15px;">
+                        <h2 style="color: #2c5282; margin: 0;">📊 Ανάλυση Ενεργειακών Αναγκών</h2>
+                        <button onclick="this.closest('div').parentElement.parentElement.remove()" 
+                                style="background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-size: 16px; cursor: pointer;">✖</button>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+                        <h4 style="color: #2c5282; margin-bottom: 10px;">Παράμετροι Ανάλυσης</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div><strong>Σπίτι:</strong> ${houseSqm} m² (τέλεια μονωμένο)</div>
+                            <div><strong>Αντλία Θερμότητας:</strong> AWH-M120/5R1</div>
+                            <div><strong>Λειτουργία:</strong> 24/7 αυτόματη</div>
+                            <div><strong>Στόχος:</strong> 21°C όλο το χρόνο</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
+                        <div>
+                            <h4 style="color: #2c5282; margin-bottom: 15px;">🌡️ Κλιματικές Συνθήκες & Λειτουργία</h4>
+                            <div style="background: linear-gradient(45deg, #e3f2fd, #fff3e0); padding: 15px; border-radius: 8px; height: 300px; overflow-y: auto;">
+                                <table style="width: 100%; font-size: 11px;">
+                                    <thead>
+                                        <tr style="background: rgba(44,82,130,0.1);">
+                                            <th style="padding: 6px; text-align: left;">Μήνας</th>
+                                            <th style="padding: 6px;">Min/Max °C</th>
+                                            <th style="padding: 6px;">Λειτουργία</th>
+                                            <th style="padding: 6px;">Ισχύς kW</th>
+                                            <th style="padding: 6px;">Απόδοση</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${balanceData.map((data, index) => {
+                                            const energyData = calculateEnergyNeeds()[index];
+                                            return `
+                                                <tr style="cursor: pointer;" onclick="showCalculationDetails('${data.month}', ${index})">
+                                                    <td style="padding: 4px; font-weight: bold;">${data.month}</td>
+                                                    <td style="padding: 4px; text-align: center; font-size: 10px;">
+                                                        ${energyData.minTemp}° / ${energyData.maxTemp}°
+                                                    </td>
+                                                    <td style="padding: 4px; text-align: center;">
+                                                        <span style="background: ${data.mode === 'heating' ? '#ff6b6b' : '#4ecdc4'}; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px;">
+                                                            ${data.mode === 'heating' ? '🔥' : '❄️'}
+                                                        </span>
+                                                    </td>
+                                                    <td style="padding: 4px; text-align: center; font-weight: bold; color: ${parseFloat(energyData.actualPower) > 2 ? '#dc3545' : '#28a745'};">
+                                                        ${energyData.actualPower}
+                                                    </td>
+                                                    <td style="padding: 4px; text-align: center;">${energyData.efficiency}</td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                                <div style="margin-top: 10px; font-size: 10px; color: #666; text-align: center;">
+                                    💡 Κάντε κλικ σε οποιονδήποτε μήνα για λεπτομερείς υπολογισμούς
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 style="color: #2c5282; margin-bottom: 15px;">⚡ Ενεργειακό Ισοζύγιο</h4>
+                            <div style="background: linear-gradient(45deg, #f3e5f5, #e8f5e8); padding: 15px; border-radius: 8px; height: 300px; overflow-y: auto;">
+                                <table style="width: 100%; font-size: 11px;">
+                                    <thead>
+                                        <tr style="background: rgba(44,82,130,0.1);">
+                                            <th style="padding: 6px;">Μήνας</th>
+                                            <th style="padding: 6px;">Παραγωγή</th>
+                                            <th style="padding: 6px;">Κατανάλωση</th>
+                                            <th style="padding: 6px;">Ισοζύγιο</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${balanceData.map(data => {
+                                            const balance = data.production - data.consumption;
+                                            const balanceColor = balance > 0 ? '#28a745' : balance > -100 ? '#ffc107' : '#dc3545';
+                                            return `
+                                                <tr>
+                                                    <td style="padding: 4px; font-weight: bold;">${data.month}</td>
+                                                    <td style="padding: 4px; text-align: center; color: #28a745;">${data.production}</td>
+                                                    <td style="padding: 4px; text-align: center; color: #dc3545;">${data.consumption}</td>
+                                                    <td style="padding: 4px; text-align: center; color: ${balanceColor}; font-weight: bold;">
+                                                        ${balance > 0 ? '+' : ''}${balance}
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 style="color: #2c5282; margin-bottom: 15px;">🔋 Ανάλυση Κάλυψης Ενεργειακών Αναγκών</h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="background: #2c5282; color: white;">
+                                    <th style="padding: 12px; border: 1px solid #ddd;">Μήνας</th>
+                                    <th style="padding: 12px; border: 1px solid #ddd;">Συνολική Ανάγκη (kWh)</th>
+                                    <th style="padding: 12px; border: 1px solid #ddd;">🌞 Άμεσα από Ηλιακά</th>
+                                    <th style="padding: 12px; border: 1px solid #ddd;">🔋 Από Μπαταρίες</th>
+                                    <th style="padding: 12px; border: 1px solid #ddd;">🔌 Από Δίκτυο</th>
+                                    <th style="padding: 12px; border: 1px solid #ddd;">📤 Πλεόνασμα στο Δίκτυο</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${balanceData.map((data, index) => `
+                                    <tr style="background: ${index % 2 === 0 ? '#f8f9fa' : 'white'};">
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${data.month}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${data.consumption}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #ff9800;">
+                                            ${data.directSolar} <span style="font-size: 11px;">(${Math.round(data.directSolar/data.consumption*100)}%)</span>
+                                        </td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #4caf50;">
+                                            ${data.battery} <span style="font-size: 11px;">(${Math.round(data.battery/data.consumption*100)}%)</span>
+                                            <div style="font-size: 9px; color: #666;">${data.batteryStatus || ''}</div>
+                                        </td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: ${data.grid > 0 ? '#f44336' : '#28a745'};">
+                                            ${data.grid > 0 ? data.grid : '0'} <span style="font-size: 11px;">(${Math.round(data.grid/data.consumption*100)}%)</span>
+                                        </td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #2196f3;">
+                                            ${data.excess > 0 ? data.excess : '-'}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; color: white;">
+                        <h4 style="margin-bottom: 15px;">📊 Ετήσια Σύνοψη</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            ${(() => {
+                                const totalConsumption = balanceData.reduce((sum, d) => sum + d.consumption, 0);
+                                const totalDirectSolar = balanceData.reduce((sum, d) => sum + d.directSolar, 0);
+                                const totalBattery = balanceData.reduce((sum, d) => sum + d.battery, 0);
+                                const totalGrid = balanceData.reduce((sum, d) => sum + d.grid, 0);
+                                const totalExcess = balanceData.reduce((sum, d) => sum + d.excess, 0);
+                                const solarCoverage = Math.round((totalDirectSolar + totalBattery) / totalConsumption * 100);
+                                
+                                return `
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 24px; font-weight: bold;">${totalConsumption.toLocaleString()}</div>
+                                        <div style="font-size: 12px; opacity: 0.9;">Συνολική Κατανάλωση (kWh)</div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 24px; font-weight: bold; color: #ffd700;">${solarCoverage}%</div>
+                                        <div style="font-size: 12px; opacity: 0.9;">Κάλυψη από Ηλιακά</div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 24px; font-weight: bold; color: #90ee90;">${totalExcess.toLocaleString()}</div>
+                                        <div style="font-size: 12px; opacity: 0.9;">Πλεόνασμα στο Δίκτυο (kWh)</div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 24px; font-weight: bold; color: #ffb6c1;">€${Math.round(totalGrid * 0.21).toLocaleString()}</div>
+                                        <div style="font-size: 12px; opacity: 0.9;">Ετήσιο Κόστος Δικτύου</div>
+                                    </div>
+                                `;
+                            })()}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Add function to show detailed calculation steps
+        function showCalculationDetails(monthName, monthIndex) {
+            const energyData = calculateEnergyNeeds()[monthIndex];
+            
+            // Create calculation detail modal
+            const detailModal = document.createElement('div');
+            detailModal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.9); z-index: 15000; display: flex; 
+                align-items: center; justify-content: center; padding: 20px;
+            `;
+            
+            const detailContent = document.createElement('div');
+            detailContent.style.cssText = `
+                background: white; border-radius: 12px; max-width: 800px; width: 100%; 
+                max-height: 90vh; overflow-y: auto; position: relative;
+            `;
+            
+            detailContent.innerHTML = `
+                <div style="padding: 25px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #2c5282; padding-bottom: 10px;">
+                        <h3 style="color: #2c5282; margin: 0;">🔍 Λεπτομερείς Υπολογισμοί - ${monthName}</h3>
+                        <button onclick="this.closest('div').parentElement.parentElement.remove()" 
+                                style="background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-size: 16px; cursor: pointer;">✖</button>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4 style="color: #2c5282; margin-bottom: 10px;">📊 Βασικά Δεδομένα</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                            <div><strong>Μέσα Θερμοκρασία:</strong> ${energyData.avgTemp}°C</div>
+                            <div><strong>Ελάχιστη:</strong> ${energyData.minTemp}°C</div>
+                            <div><strong>Μέγιστη:</strong> ${energyData.maxTemp}°C</div>
+                            <div><strong>Λειτουργία:</strong> ${energyData.mode === 'heating' ? '🔥 Θέρμανση' : '❄️ Ψύξη'}</div>
+                        </div>
+                    </div>
+
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4 style="color: #856404; margin-bottom: 15px;">⚙️ Βήμα-προς-Βήμα Υπολογισμοί</h4>
+                        <div style="font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6;">
+                            ${energyData.calculationSteps.map(step => `
+                                <div style="margin-bottom: 8px; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #ffc107;">
+                                    ${step}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white;">
+                        <h4 style="margin-bottom: 15px;">📈 Τελικά Αποτελέσματα</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center;">
+                            <div>
+                                <div style="font-size: 20px; font-weight: bold;">${energyData.dailyConsumption}</div>
+                                <div style="font-size: 12px; opacity: 0.9;">kWh/ημέρα</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 20px; font-weight: bold;">${energyData.monthlyConsumption}</div>
+                                <div style="font-size: 12px; opacity: 0.9;">kWh/μήνα</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 20px; font-weight: bold;">€${Math.round(energyData.monthlyConsumption * 0.21)}</div>
+                                <div style="font-size: 12px; opacity: 0.9;">Κόστος/μήνα</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; padding: 15px; background: #d1ecf1; border-radius: 8px; font-size: 13px; color: #0c5460;">
+                        <strong>💡 Σημείωση:</strong> Οι υπολογισμοί λαμβάνουν υπόψη τη μείωση της απόδοσης της αντλίας θερμότητας σε ακραίες θερμοκρασίες. 
+                        Σε πολύ κρύο καιρό (κάτω από 5°C) ή πολύ ζεστό (πάνω από 35°C), η αντλία χρειάζεται περισσότερη ισχύ και έχει μειωμένη απόδοση.
+                    </div>
+                </div>
+            `;
+            
+            detailModal.appendChild(detailContent);
+            document.body.appendChild(detailModal);
+            
+            // Close on background click
+            detailModal.addEventListener('click', (e) => {
+                if (e.target === detailModal) {
+                    detailModal.remove();
+                }
+            });
         }
     </script>
 
@@ -482,6 +951,26 @@
                 Εναλλακτικά: Πατήστε <strong>Ctrl+P</strong> (Windows) ή <strong>Cmd+P</strong> (Mac)
             </div>
 
+            <div style="margin: 20px 0; padding: 15px; background: #e8f4f8; border-radius: 4px; border-left: 4px solid #2c5282;">
+                <h4 style="color: #2c5282; margin-bottom: 15px;">Ανάλυση Ενεργειακών Αναγκών</h4>
+                
+                <div class="control-group">
+                    <label>Μοντέλο Αντλίας Θερμότητας:</label>
+                    <select id="heatpump-model">
+                        <option value="AWH-M120/5R1">AWH-M120/5R1 (0.75kW θέρμανση, 0.85kW ψύξη)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>Τετραγωνικά Μέτρα Σπιτιού:</label>
+                    <input type="number" id="house-sqm" min="50" max="500" value="120" oninput="updateEnergyAnalysis()">
+                </div>
+
+                <button class="generate-btn" onclick="showEnergyPlot()" style="background: #28a745; margin-top: 10px;">
+                    📊 Εμφάνιση Ανάλυσης Ενέργειας
+                </button>
+            </div>
+
             <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; font-size: 12px;">
                 <strong>Σύνοψη Συστήματος:</strong><br>
                 Συνολικά Πάνελ: <span id="summary-panels">5</span><br>
@@ -493,6 +982,7 @@
 
     <script>
         window.onload = function() {
+            updateBatteryOptions();
             updateAll();
         };
     </script>
