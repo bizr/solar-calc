@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="el">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Quotation System</title>
+    <title>Σύστημα Προσφορών Φωτοβολταϊκών</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Times New Roman', serif; background-color: #f5f5f5; color: #333; }
@@ -52,31 +52,11 @@
         .environmental-section { background: #e8f5e8; padding: 20px; border-radius: 4px; margin: 20px 0; }
         @media print {
             .control-panel { display: none !important; }
-            .document-area { 
-                max-width: 100% !important; 
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .quotation-document { 
-                box-shadow: none !important; 
-                margin: 0 !important; 
-                padding: 15mm !important;
-                max-width: none !important;
-                width: 100% !important;
-            }
-            .page-break { 
-                page-break-before: always !important; 
-                margin-top: 0 !important; 
-                padding-top: 20px !important; 
-            }
-            body {
-                background: white !important;
-                font-size: 12pt !important;
-                line-height: 1.4 !important;
-            }
-            .container {
-                display: block !important;
-            }
+            .document-area { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .quotation-document { box-shadow: none !important; margin: 0 !important; padding: 15mm !important; max-width: none !important; width: 100% !important; }
+            .page-break { page-break-before: always !important; margin-top: 0 !important; padding-top: 20px !important; }
+            body { background: white !important; font-size: 12pt !important; line-height: 1.4 !important; }
+            .container { display: block !important; }
         }
         @media (max-width: 768px) {
             .container { flex-direction: column; }
@@ -85,6 +65,8 @@
             .customer-info, .financial-metrics { grid-template-columns: 1fr; }
         }
     </style>
+</head>
+<body>
     <script>
         const panels = {
             'JKM435N-54HL4R-V': { power: 435, efficiency: 21.77, width: 1.134, height: 1.762, maxVoltage: 32.59, maxCurrent: 13.35, price: 95 },
@@ -102,15 +84,15 @@
             
             if (inverterType === 'EM5500-48L') {
                 batterySelect.innerHTML = `
-                    <option value="15.5">15.5 kWh (16 cells, 48V)</option>
-                    <option value="31.0">31.0 kWh (32 cells, 48V)</option>
-                    <option value="46.5">46.5 kWh (48 cells, 48V)</option>
+                    <option value="15.5">15,5 kWh (16 στοιχεία, 48V)</option>
+                    <option value="31.0">31,0 kWh (32 στοιχεία, 48V)</option>
+                    <option value="46.5">46,5 kWh (48 στοιχεία, 48V)</option>
                 `;
             } else {
                 batterySelect.innerHTML = `
-                    <option value="7.75">7.75 kWh (8 cells, 24V)</option>
-                    <option value="15.5">15.5 kWh (16 cells, 24V)</option>
-                    <option value="23.25">23.25 kWh (24 cells, 24V)</option>
+                    <option value="7.75">7,75 kWh (8 στοιχεία, 24V)</option>
+                    <option value="15.5">15,5 kWh (16 στοιχεία, 24V)</option>
+                    <option value="23.25">23,25 kWh (24 στοιχεία, 24V)</option>
                 `;
             }
             updateAll();
@@ -150,9 +132,9 @@
             const laborCost = Math.round(laborHours * 10);
             const totalCost = panelCost + panelBaseCost + inverterCost + batteryCost + laborCost;
 
-            const annualSavings = Math.round(annualProduction * 0.10);
+            const annualSavings = Math.round(annualProduction * 0.21);
             const paybackPeriod = (totalCost / annualSavings).toFixed(1);
-            const costPerKW = Math.round(totalCost / totalCapacity);
+            const lifetimeSavings = Math.round((annualSavings * 25) - totalCost);
             const roiPercentage = ((annualSavings / totalCost) * 100).toFixed(1);
 
             const annualCO2Reduction = (annualProduction * 0.5 / 1000).toFixed(2);
@@ -172,33 +154,33 @@
             document.getElementById('annual-production').textContent = annualProduction.toLocaleString() + ' kWh';
 
             document.getElementById('pricing-table-body').innerHTML = `
-                <tr><td>Solar Panels</td><td>${panelType} (${panel.power}W each)</td><td>${totalPanels}</td><td>€${panel.price}</td><td>€${panelCost}</td></tr>
-                <tr><td>Panel Mounting & Base</td><td>Mounting hardware</td><td>${totalPanels}</td><td>€50</td><td>€${panelBaseCost}</td></tr>
-                <tr><td>Inverter</td><td>${inverterType} (${inverter.power}W, ${inverter.voltage}V)</td><td>1</td><td>€${inverter.price}</td><td>€${inverterCost}</td></tr>
-                <tr><td>Battery System</td><td>${batteryCapacity} kWh (${batteryCells} cells + BMS)</td><td>1</td><td>€${batteryCost}</td><td>€${batteryCost}</td></tr>
-                <tr><td>Installation Labor</td><td>Professional installation (${laborHours.toFixed(1)} hours)</td><td>1</td><td>€${laborCost}</td><td>€${laborCost}</td></tr>
-                <tr class="total-row"><td colspan="4"><strong>TOTAL SYSTEM COST</strong></td><td><strong>€${totalCost}</strong></td></tr>
+                <tr><td>Φωτοβολταϊκά Πάνελ</td><td>${panelType} (${panel.power}W έκαστο)</td><td>${totalPanels}</td><td>€${panel.price}</td><td>€${panelCost}</td></tr>
+                <tr><td>Βάσεις & Στήριξη Πάνελ</td><td>Υλικά στήριξης και βάσεις</td><td>${totalPanels}</td><td>€50</td><td>€${panelBaseCost}</td></tr>
+                <tr><td>Μετατροπέας</td><td>${inverterType} (${inverter.power}W, ${inverter.voltage}V)</td><td>1</td><td>€${inverter.price}</td><td>€${inverterCost}</td></tr>
+                <tr><td>Σύστημα Μπαταριών</td><td>${batteryCapacity} kWh (${batteryCells} στοιχεία + BMS)</td><td>1</td><td>€${batteryCost}</td><td>€${batteryCost}</td></tr>
+                <tr><td>Εργασίες Εγκατάστασης</td><td>Επαγγελματική εγκατάσταση (${laborHours.toFixed(1)} ώρες)</td><td>1</td><td>€${laborCost}</td><td>€${laborCost}</td></tr>
+                <tr class="total-row"><td colspan="4"><strong>ΣΥΝΟΛΙΚΟ ΚΟΣΤΟΣ ΣΥΣΤΗΜΑΤΟΣ</strong></td><td><strong>€${totalCost}</strong></td></tr>
             `;
 
             document.getElementById('panel-specs').innerHTML = `
-                <p><strong>Model:</strong> ${panelType}</p>
-                <p><strong>Power Output:</strong> ${panel.power}W per panel</p>
-                <p><strong>Efficiency:</strong> ${panel.efficiency}%</p>
-                <p><strong>Dimensions:</strong> ${panel.width}m × ${panel.height}m</p>
-                <p><strong>Max Power Voltage:</strong> ${panel.maxVoltage}V</p>
-                <p><strong>Max Power Current:</strong> ${panel.maxCurrent}A</p>
+                <p><strong>Μοντέλο:</strong> ${panelType}</p>
+                <p><strong>Ισχύς Εξόδου:</strong> ${panel.power}W ανά πάνελ</p>
+                <p><strong>Απόδοση:</strong> ${panel.efficiency}%</p>
+                <p><strong>Διαστάσεις:</strong> ${panel.width}m × ${panel.height}m</p>
+                <p><strong>Μέγιστη Τάση Ισχύος:</strong> ${panel.maxVoltage}V</p>
+                <p><strong>Μέγιστο Ρεύμα Ισχύος:</strong> ${panel.maxCurrent}A</p>
             `;
 
             document.getElementById('inverter-specs').innerHTML = `
-                <p><strong>Model:</strong> ${inverterType}</p>
-                <p><strong>Power Output:</strong> ${inverter.power}W</p>
-                <p><strong>System Voltage:</strong> ${inverter.voltage}V</p>
-                <p><strong>MPPT Range:</strong> ${inverter.mpptMin}-${inverter.mpptMax}V</p>
+                <p><strong>Μοντέλο:</strong> ${inverterType}</p>
+                <p><strong>Ισχύς Εξόδου:</strong> ${inverter.power}W</p>
+                <p><strong>Τάση Συστήματος:</strong> ${inverter.voltage}V</p>
+                <p><strong>Εύρος MPPT:</strong> ${inverter.mpptMin}-${inverter.mpptMax}V</p>
             `;
 
             document.getElementById('payback-period').textContent = paybackPeriod;
-            document.getElementById('annual-savings').textContent = '€' + annualSavings;
-            document.getElementById('cost-per-kw').textContent = '€' + costPerKW;
+            document.getElementById('annual-savings').textContent = '€' + annualSavings.toLocaleString();
+            document.getElementById('lifetime-savings').textContent = '€' + lifetimeSavings.toLocaleString();
             document.getElementById('roi-percentage').textContent = roiPercentage + '%';
             document.getElementById('co2-reduction').textContent = annualCO2Reduction;
             document.getElementById('tree-equivalent').textContent = treeEquivalent;
@@ -208,7 +190,31 @@
 
             document.getElementById('summary-panels').textContent = totalPanels;
             document.getElementById('summary-capacity').textContent = totalCapacity.toFixed(2) + ' kW';
-            document.getElementById('summary-cost').textContent = '€' + totalCost;
+            document.getElementById('summary-cost').textContent = '€' + totalCost.toLocaleString();
+
+            updateMonthlyProduction(totalArea, panel.efficiency);
+        }
+
+        function updateMonthlyProduction(totalArea, efficiency) {
+            const monthlyIrradiance = [2.5, 3.3, 4.7, 6.1, 7.1, 7.9, 7.9, 7.0, 5.6, 4.0, 2.7, 2.2];
+            const monthNames = ['Ιαν', 'Φεβ', 'Μάρ', 'Απρ', 'Μάι', 'Ιούν', 'Ιούλ', 'Αύγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
+            const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            
+            const monthlyTableBody = document.getElementById('monthly-production');
+            if (!monthlyTableBody) return;
+            
+            let html = '';
+            monthlyIrradiance.forEach((irradiance, index) => {
+                const monthlyProduction = Math.round(totalArea * irradiance * daysInMonth[index] * (efficiency / 100));
+                html += `
+                    <tr>
+                        <td>${monthNames[index]}</td>
+                        <td>${irradiance}</td>
+                        <td>${monthlyProduction}</td>
+                    </tr>
+                `;
+            });
+            monthlyTableBody.innerHTML = html;
         }
 
         function generatePDF() {
@@ -216,245 +222,227 @@
             const originalText = btn.textContent;
             
             try {
-                btn.textContent = 'Opening Print Dialog...';
+                btn.textContent = 'Άνοιγμα Διαλόγου Εκτύπωσης...';
                 btn.style.background = '#28a745';
                 
-                // Force immediate print dialog
                 if (window.print) {
                     window.print();
                 } else {
-                    alert('Print function not available. Please use Ctrl+P (Windows) or Cmd+P (Mac) to print.');
+                    alert('Η λειτουργία εκτύπωσης δεν είναι διαθέσιμη. Παρακαλώ χρησιμοποιήστε Ctrl+P (Windows) ή Cmd+P (Mac) για εκτύπωση.');
                 }
                 
-                // Reset button after a delay
                 setTimeout(() => {
                     btn.textContent = originalText;
                     btn.style.background = '#2c5282';
                 }, 1500);
                 
             } catch (error) {
-                console.error('Print error:', error);
-                alert('Unable to open print dialog. Please use Ctrl+P (Windows) or Cmd+P (Mac) to print this page.');
+                console.error('Σφάλμα εκτύπωσης:', error);
+                alert('Αδυναμία ανοίγματος διαλόγου εκτύπωσης. Παρακαλώ χρησιμοποιήστε Ctrl+P (Windows) ή Cmd+P (Mac) για εκτύπωση.');
                 btn.textContent = originalText;
                 btn.style.background = '#2c5282';
             }
         }
     </script>
-</head>
-<body>
+
     <div class="container">
         <div class="document-area">
             <div class="quotation-document">
                 <div class="header">
-                    <div class="company-name">HELIOS SOLAR SOLUTIONS</div>
-                    <div class="company-tagline">Powering Your Future with Clean Energy</div>
+                    <div class="company-name">ΗΛΙΟΣ ΦΩΤΟΒΟΛΤΑΪΚΕΣ ΛΥΣΕΙΣ</div>
+                    <div class="company-tagline">Τροφοδοτώντας το Μέλλον σας με Καθαρή Ενέργεια</div>
                 </div>
 
-                <div class="quote-title">SOLAR ENERGY SYSTEM QUOTATION</div>
+                <div class="quote-title">ΠΡΟΣΦΟΡΑ ΦΩΤΟΒΟΛΤΑΪΚΟΥ ΣΥΣΤΗΜΑΤΟΣ</div>
 
                 <div class="customer-info">
                     <div class="info-section">
-                        <h3>Customer Information</h3>
-                        <p><strong>Name:</strong> <span id="display-customer-name">John Doe</span></p>
-                        <p><strong>Address:</strong> <span id="display-customer-address">123 Main Street, Kalamata, Greece</span></p>
-                        <p><strong>Date:</strong> June 27, 2025</p>
-                        <p><strong>Quote Valid Until:</strong> July 27, 2025</p>
+                        <h3>Στοιχεία Πελάτη</h3>
+                        <p><strong>Όνομα:</strong> <span id="display-customer-name">Ιωάννης Παπαδόπουλος</span></p>
+                        <p><strong>Διεύθυνση:</strong> <span id="display-customer-address">Μαρίνου Αντύπα 123, Καλαμάτα, Ελλάδα</span></p>
+                        <p><strong>Ημερομηνία:</strong> 28 Ιουνίου 2025</p>
+                        <p><strong>Ισχύς Προσφοράς μέχρι:</strong> 28 Ιουλίου 2025</p>
                     </div>
                     <div class="info-section">
-                        <h3>System Summary</h3>
-                        <p><strong>Total Capacity:</strong> <span id="total-capacity">2.18 kW</span></p>
-                        <p><strong>Panel Type:</strong> <span id="panel-type-display">JKM435N-54HL4R-V</span></p>
-                        <p><strong>Number of Panels:</strong> <span id="total-panels">5</span></p>
-                        <p><strong>Inverter:</strong> <span id="inverter-display">EM5500-48L</span></p>
-                        <p><strong>Battery Capacity:</strong> <span id="battery-display">15.5 kWh</span></p>
+                        <h3>Σύνοψη Συστήματος</h3>
+                        <p><strong>Συνολική Ισχύς:</strong> <span id="total-capacity">2,18 kW</span></p>
+                        <p><strong>Τύπος Πάνελ:</strong> <span id="panel-type-display">JKM435N-54HL4R-V</span></p>
+                        <p><strong>Αριθμός Πάνελ:</strong> <span id="total-panels">5</span></p>
+                        <p><strong>Μετατροπέας:</strong> <span id="inverter-display">EM5500-48L</span></p>
+                        <p><strong>Χωρητικότητα Μπαταρίας:</strong> <span id="battery-display">15,5 kWh</span></p>
                     </div>
                 </div>
 
                 <div class="system-overview">
-                    <h3>System Overview</h3>
-                    <p>This solar energy system is designed specifically for your property in Kalamata, utilizing high-efficiency solar panels and advanced inverter technology. The system includes battery storage for energy independence and will provide clean, renewable energy for years to come.</p>
+                    <h3>Επισκόπηση Συστήματος</h3>
+                    <p>Το φωτοβολταϊκό σύστημα έχει σχεδιαστεί ειδικά για την ιδιοκτησία σας στην Καλαμάτα, αξιοποιώντας φωτοβολταϊκά πάνελ υψηλής απόδοσης και προηγμένη τεχνολογία μετατροπέα. Το σύστημα περιλαμβάνει αποθήκευση ενέργειας σε μπαταρίες για ενεργειακή ανεξαρτησία και θα παρέχει καθαρή, ανανεώσιμη ενέργεια για πολλά χρόνια.</p>
                     
                     <div style="margin-top: 15px;">
-                        <strong>System Configuration:</strong>
+                        <strong>Διαμόρφωση Συστήματος:</strong>
                         <ul style="margin-left: 20px; margin-top: 10px;">
-                            <li><span id="series-count">1</span> panels in series × <span id="parallel-count">5</span> strings in parallel</li>
-                            <li>System Voltage: <span id="system-voltage">435V</span></li>
-                            <li>System Current: <span id="system-current">66.75A</span></li>
-                            <li>Annual Energy Production: <span id="annual-production">3,900 kWh</span></li>
+                            <li><span id="series-count">1</span> πάνελ σε σειρά × <span id="parallel-count">5</span> γραμμές παράλληλα</li>
+                            <li>Τάση Συστήματος: <span id="system-voltage">435V</span></li>
+                            <li>Ρεύμα Συστήματος: <span id="system-current">66,75A</span></li>
+                            <li>Ετήσια Παραγωγή Ενέργειας: <span id="annual-production">3.900 kWh</span></li>
                         </ul>
                     </div>
                 </div>
 
                 <table class="pricing-table">
                     <thead>
-                        <tr><th>Item</th><th>Description</th><th>Quantity</th><th>Unit Price</th><th>Total</th></tr>
+                        <tr><th>Είδος</th><th>Περιγραφή</th><th>Ποσότητα</th><th>Τιμή Μονάδας</th><th>Σύνολο</th></tr>
                     </thead>
                     <tbody id="pricing-table-body">
-                        <tr><td>Solar Panels</td><td>JKM435N-54HL4R-V (435W each)</td><td>5</td><td>€95</td><td>€475</td></tr>
-                        <tr><td>Panel Mounting & Base</td><td>Mounting hardware</td><td>5</td><td>€50</td><td>€250</td></tr>
-                        <tr><td>Inverter</td><td>EM5500-48L (5500W, 48V)</td><td>1</td><td>€499</td><td>€499</td></tr>
-                        <tr><td>Battery System</td><td>15.5 kWh (16 cells + BMS)</td><td>1</td><td>€1910</td><td>€1910</td></tr>
-                        <tr><td>Installation Labor</td><td>Professional installation</td><td>1</td><td>€184</td><td>€184</td></tr>
-                        <tr class="total-row"><td colspan="4"><strong>TOTAL SYSTEM COST</strong></td><td><strong>€3,318</strong></td></tr>
+                        <!-- Θα συμπληρωθεί από JavaScript -->
                     </tbody>
                 </table>
 
                 <div class="page-break">
-                    <div class="quote-title">TECHNICAL SPECIFICATIONS & ANALYSIS</div>
+                    <div class="quote-title">ΤΕΧΝΙΚΕΣ ΠΡΟΔΙΑΓΡΑΦΕΣ & ΑΝΑΛΥΣΗ</div>
 
                     <div class="info-section">
-                        <h3>Panel Specifications</h3>
+                        <h3>Προδιαγραφές Πάνελ</h3>
                         <div id="panel-specs">
-                            <p><strong>Model:</strong> JKM435N-54HL4R-V</p>
-                            <p><strong>Power Output:</strong> 435W per panel</p>
-                            <p><strong>Efficiency:</strong> 21.77%</p>
-                            <p><strong>Dimensions:</strong> 1.134m × 1.762m</p>
-                            <p><strong>Max Power Voltage:</strong> 32.59V</p>
-                            <p><strong>Max Power Current:</strong> 13.35A</p>
+                            <!-- Θα συμπληρωθεί από JavaScript -->
                         </div>
                     </div>
 
                     <div class="info-section" style="margin-top: 20px;">
-                        <h3>Inverter Specifications</h3>
+                        <h3>Προδιαγραφές Μετατροπέα</h3>
                         <div id="inverter-specs">
-                            <p><strong>Model:</strong> EM5500-48L</p>
-                            <p><strong>Power Output:</strong> 5500W</p>
-                            <p><strong>System Voltage:</strong> 48V</p>
-                            <p><strong>MPPT Range:</strong> 120-500V</p>
+                            <!-- Θα συμπληρωθεί από JavaScript -->
                         </div>
                     </div>
 
                     <div class="financial-metrics">
                         <div class="metric-card">
-                            <div class="metric-value" id="payback-period">8.5</div>
-                            <div class="metric-label">Years Payback Period</div>
+                            <div class="metric-value" id="payback-period">4,0</div>
+                            <div class="metric-label">Έτη Περιόδου Απόσβεσης</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-value" id="annual-savings">€390</div>
-                            <div class="metric-label">Annual Savings</div>
+                            <div class="metric-value" id="annual-savings">€820</div>
+                            <div class="metric-label">Ετήσια Εξοικονόμηση</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-value" id="cost-per-kw">€1,522</div>
-                            <div class="metric-label">Cost per kW</div>
+                            <div class="metric-value" id="lifetime-savings">€17.182</div>
+                            <div class="metric-label">Συνολική Εξοικονόμηση 25ετίας</div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-value" id="roi-percentage">11.8%</div>
-                            <div class="metric-label">Annual ROI</div>
+                            <div class="metric-value" id="roi-percentage">24,7%</div>
+                            <div class="metric-label">Ετήσια Απόδοση Επένδυσης</div>
                         </div>
                     </div>
 
                     <div class="environmental-section">
-                        <h3>Environmental Impact</h3>
+                        <h3>Περιβαλλοντικό Αποτύπωμα</h3>
                         <div class="financial-metrics">
                             <div class="metric-card">
-                                <div class="metric-value" id="co2-reduction">1.95</div>
-                                <div class="metric-label">Tons CO₂ Saved/Year</div>
+                                <div class="metric-value" id="co2-reduction">1,95</div>
+                                <div class="metric-label">Τόνοι CO₂ Εξοικονόμησης/Έτος</div>
                             </div>
                             <div class="metric-card">
                                 <div class="metric-value" id="tree-equivalent">45</div>
-                                <div class="metric-label">Trees Planted Equivalent</div>
+                                <div class="metric-label">Ισοδύναμο Φυτεμένων Δέντρων</div>
                             </div>
                         </div>
                         <p style="margin-top: 15px; text-align: center; font-style: italic;">
-                            Over 25 years, this system will offset <span id="lifetime-co2">48.8</span> tons of CO₂, 
-                            equivalent to planting <span id="lifetime-trees">1,125</span> trees.
+                            Σε 25 χρόνια, το σύστημα θα εξοικονομήσει <span id="lifetime-co2">48,8</span> τόνους CO₂, 
+                            ισοδύναμο με τη φύτευση <span id="lifetime-trees">1.125</span> δέντρων.
                         </p>
                     </div>
 
                     <div class="info-section" style="margin-top: 20px;">
-                        <h3>Monthly Energy Production Forecast</h3>
+                        <h3>Μηνιαία Πρόβλεψη Παραγωγής Ενέργειας</h3>
                         <table class="pricing-table">
                             <thead>
-                                <tr><th>Month</th><th>Solar Irradiance (kWh/m²/day)</th><th>Estimated Production (kWh)</th></tr>
+                                <tr><th>Μήνας</th><th>Ηλιακή Ακτινοβολία (kWh/m²/ημέρα)</th><th>Εκτιμώμενη Παραγωγή (kWh)</th></tr>
                             </thead>
-                            <tbody>
-                                <tr><td>Jan</td><td>2.5</td><td>250</td></tr>
-                                <tr><td>Feb</td><td>3.3</td><td>297</td></tr>
-                                <tr><td>Mar</td><td>4.7</td><td>471</td></tr>
-                                <tr><td>Apr</td><td>6.1</td><td>549</td></tr>
-                                <tr><td>May</td><td>7.1</td><td>712</td></tr>
-                                <tr><td>Jun</td><td>7.9</td><td>711</td></tr>
-                                <tr><td>Jul</td><td>7.9</td><td>792</td></tr>
-                                <tr><td>Aug</td><td>7.0</td><td>702</td></tr>
-                                <tr><td>Sep</td><td>5.6</td><td>504</td></tr>
-                                <tr><td>Oct</td><td>4.0</td><td>401</td></tr>
-                                <tr><td>Nov</td><td>2.7</td><td>243</td></tr>
-                                <tr><td>Dec</td><td>2.2</td><td>221</td></tr>
+                            <tbody id="monthly-production">
+                                <!-- Θα συμπληρωθεί από JavaScript -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
                 <div class="page-break">
-                    <div class="quote-title">TERMS & CONDITIONS</div>
+                    <div class="quote-title">ΟΡΟΙ & ΠΡΟΫΠΟΘΕΣΕΙΣ</div>
 
                     <div class="terms-section">
-                        <h3>Installation Terms</h3>
+                        <h3>Όροι Εγκατάστασης</h3>
                         <ul>
-                            <li>Installation time: <span id="labor-hours">18.4</span> hours (2-3 working days)</li>
-                            <li>All electrical work performed by certified electricians</li>
-                            <li>Installation includes mounting hardware, electrical connections, and system commissioning</li>
-                            <li>Site survey and structural assessment included in price</li>
-                            <li>System monitoring and performance verification included</li>
+                            <li>Χρόνος εγκατάστασης: <span id="labor-hours">18,4</span> ώρες (2-3 εργάσιμες ημέρες)</li>
+                            <li>Όλες οι ηλεκτρολογικές εργασίες εκτελούνται από πιστοποιημένους ηλεκτρολόγους</li>
+                            <li>Η εγκατάσταση περιλαμβάνει υλικά στήριξης, ηλεκτρικές συνδέσεις και θέση σε λειτουργία</li>
+                            <li>Επιτόπια επίσκεψη και στατική μελέτη περιλαμβάνονται στην τιμή</li>
+                            <li>Παρακολούθηση συστήματος και επαλήθευση απόδοσης περιλαμβάνονται</li>
                         </ul>
 
-                        <h3>Payment Terms</h3>
+                        <h3>Όροι Πληρωμής</h3>
                         <ul>
-                            <li>50% deposit required upon contract signing</li>
-                            <li>25% due upon delivery of equipment</li>
-                            <li>25% final payment due upon system commissioning</li>
-                            <li>All prices include VAT where applicable</li>
-                            <li>Quote valid for 30 days from issue date</li>
+                            <li>Προκαταβολή 50% απαιτείται κατά την υπογραφή της σύμβασης</li>
+                            <li>25% κατά την παράδοση του εξοπλισμού</li>
+                            <li>25% τελική πληρωμή κατά τη θέση σε λειτουργία του συστήματος</li>
+                            <li>Όλες οι τιμές περιλαμβάνουν Φ.Π.Α. όπου εφαρμόζεται</li>
+                            <li>Η προσφορά ισχύει για 30 ημέρες από την ημερομηνία έκδοσης</li>
                         </ul>
 
-                        <h3>Warranties</h3>
+                        <h3>Εγγυήσεις</h3>
                         <ul>
-                            <li><strong>Solar Panels:</strong> 25-year performance warranty (80% capacity)</li>
-                            <li><strong>Inverter:</strong> 10-year manufacturer warranty</li>
-                            <li><strong>Battery System:</strong> 10-year/10,000 cycle warranty</li>
-                            <li><strong>Installation:</strong> 5-year workmanship warranty</li>
-                            <li><strong>Monitoring:</strong> 5-year system monitoring included</li>
+                            <li><strong>Φωτοβολταϊκά Πάνελ:</strong> 25ετής εγγύηση απόδοσης (80% ισχύς)</li>
+                            <li><strong>Μετατροπέας:</strong> 10ετής εγγύηση κατασκευαστή</li>
+                            <li><strong>Σύστημα Μπαταριών:</strong> 10ετής εγγύηση/10.000 κύκλων</li>
+                            <li><strong>Εγκατάσταση:</strong> 5ετής εγγύηση εργασιών</li>
+                            <li><strong>Παρακολούθηση:</strong> 5ετής παρακολούθηση συστήματος</li>
+                        </ul>
+
+                        <h3>Πρόσθετες Πληροφορίες</h3>
+                        <ul>
+                            <li>Άδειες και υποστήριξη σύνδεσης στο δίκτυο περιλαμβάνονται</li>
+                            <li>Ετήσια υπηρεσία συντήρησης διαθέσιμη (προαιρετικά)</li>
+                            <li>Το σύστημα είναι σχεδιασμένο για λειτουργική ζωή 25+ ετών</li>
+                            <li>Συμβατότητα με net metering όπου εφαρμόζεται</li>
+                            <li>Παρέχεται επαγγελματικός φάκελος τεκμηρίωσης συστήματος</li>
                         </ul>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 50px; padding-top: 30px; border-top: 1px solid #ddd;">
                         <div style="text-align: center;">
                             <div style="border-bottom: 1px solid #333; margin-bottom: 10px; height: 40px;"></div>
-                            <p><strong>Customer Signature</strong></p>
-                            <p>Date: _______________</p>
+                            <p><strong>Υπογραφή Πελάτη</strong></p>
+                            <p>Ημερομηνία: _______________</p>
                         </div>
                         <div style="text-align: center;">
                             <div style="border-bottom: 1px solid #333; margin-bottom: 10px; height: 40px;"></div>
-                            <p><strong>Helios Solar Solutions</strong></p>
-                            <p>Date: _______________</p>
+                            <p><strong>Ήλιος Φωτοβολταϊκές Λύσεις</strong></p>
+                            <p>Ημερομηνία: _______________</p>
                         </div>
                     </div>
 
                     <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
-                        <p><strong>Contact Information</strong></p>
-                        <p>Email: info@heliossolar.gr | Phone: +30 27210 12345</p>
-                        <p>Address: 123 Solar Street, Kalamata 24100, Greece</p>
-                        <p style="margin-top: 10px; font-style: italic;">Thank you for choosing Helios Solar Solutions!</p>
+                        <p><strong>Στοιχεία Επικοινωνίας</strong></p>
+                        <p>Email: info@heliossolar.gr | Τηλέφωνο: +30 27210 12345</p>
+                        <p>Διεύθυνση: Ηλιακή 123, Καλαμάτα 24100, Ελλάδα</p>
+                        <p style="margin-top: 10px; font-style: italic;">Σας ευχαριστούμε που επιλέξατε την Ήλιος Φωτοβολταϊκές Λύσεις!</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="control-panel">
-            <h3 style="color: #2c5282; margin-bottom: 20px; text-align: center;">System Configuration</h3>
+            <h3 style="color: #2c5282; margin-bottom: 20px; text-align: center;">Διαμόρφωση Συστήματος</h3>
             
             <div class="control-group">
-                <label>Customer Name:</label>
-                <input type="text" id="customer-name" value="John Doe" oninput="updateAll()">
+                <label>Όνομα Πελάτη:</label>
+                <input type="text" id="customer-name" value="Ιωάννης Παπαδόπουλος" oninput="updateAll()">
             </div>
 
             <div class="control-group">
-                <label>Customer Address:</label>
-                <input type="text" id="customer-address" value="123 Main Street, Kalamata, Greece" oninput="updateAll()">
+                <label>Διεύθυνση Πελάτη:</label>
+                <input type="text" id="customer-address" value="Μαρίνου Αντύπα 123, Καλαμάτα, Ελλάδα" oninput="updateAll()">
             </div>
 
             <div class="control-group">
-                <label>Panel Type:</label>
+                <label>Τύπος Πάνελ:</label>
                 <select id="panel-type" onchange="updateAll()">
                     <option value="JKM435N-54HL4R-V">JKM435N-54HL4R-V (435W)</option>
                     <option value="Longi LR5-54HPB-410M">Longi LR5-54HPB-410M (410W)</option>
@@ -462,17 +450,17 @@
             </div>
 
             <div class="control-group">
-                <label>Panels in Series (1-20):</label>
+                <label>Πάνελ σε Σειρά (1-20):</label>
                 <input type="number" id="panels-series" min="1" max="20" value="1" oninput="updateAll()">
             </div>
 
             <div class="control-group">
-                <label>Strings in Parallel (1-10):</label>
+                <label>Γραμμές Παράλληλα (1-10):</label>
                 <input type="number" id="strings-parallel" min="1" max="10" value="5" oninput="updateAll()">
             </div>
 
             <div class="control-group">
-                <label>Inverter Type:</label>
+                <label>Τύπος Μετατροπέα:</label>
                 <select id="inverter-type" onchange="updateBatteryOptions()">
                     <option value="EM5500-48L">EM5500-48L (5500W, 48V)</option>
                     <option value="EM3500-24L">EM3500-24L (3500W, 24V)</option>
@@ -480,25 +468,25 @@
             </div>
 
             <div class="control-group">
-                <label>Battery Capacity:</label>
+                <label>Χωρητικότητα Μπαταρίας:</label>
                 <select id="battery-capacity" onchange="updateAll()">
-                    <option value="15.5">15.5 kWh (16 cells, 48V)</option>
-                    <option value="31.0">31.0 kWh (32 cells, 48V)</option>
-                    <option value="46.5">46.5 kWh (48 cells, 48V)</option>
+                    <option value="15.5">15,5 kWh (16 στοιχεία, 48V)</option>
+                    <option value="31.0">31,0 kWh (32 στοιχεία, 48V)</option>
+                    <option value="46.5">46,5 kWh (48 στοιχεία, 48V)</option>
                 </select>
             </div>
 
-            <button class="generate-btn" onclick="generatePDF()">Generate PDF Quote</button>
+            <button class="generate-btn" onclick="generatePDF()">Δημιουργία Προσφοράς PDF</button>
             
             <div style="margin-top: 10px; text-align: center; font-size: 12px; color: #666;">
-                Alternative: Press <strong>Ctrl+P</strong> (Windows) or <strong>Cmd+P</strong> (Mac)
+                Εναλλακτικά: Πατήστε <strong>Ctrl+P</strong> (Windows) ή <strong>Cmd+P</strong> (Mac)
             </div>
 
             <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; font-size: 12px;">
-                <strong>System Summary:</strong><br>
-                Total Panels: <span id="summary-panels">5</span><br>
-                Total Capacity: <span id="summary-capacity">2.18 kW</span><br>
-                Total Cost: <span id="summary-cost">€3,318</span>
+                <strong>Σύνοψη Συστήματος:</strong><br>
+                Συνολικά Πάνελ: <span id="summary-panels">5</span><br>
+                Συνολική Ισχύς: <span id="summary-capacity">2,18 kW</span><br>
+                Συνολικό Κόστος: <span id="summary-cost">€3.318</span>
             </div>
         </div>
     </div>
