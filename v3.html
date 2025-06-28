@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Σύστημα Προσφορών Φωτοβολταϊκών</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Times New Roman', serif; background-color: #f5f5f5; color: #333; }
+        .container { display: flex; min-height: 100vh; }
+        .document-area { flex: 1; padding: 20px; max-width: calc(100% - 320px); }
+        .control-panel {
+            width: 300px; position: fixed; right: 10px; top: 10px; background: white;
+            border: 1px solid #ddd; border-radius: 8px; padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); height: calc(100vh - 20px);
+            overflow-y: auto; z-index: 1000;
+        }
+        .quotation-document {
+            background: white; padding: 40px; margin: 0 auto; max-width: 210mm;
+            min-height: 297mm; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .page-break { page-break-before: always; margin-top: 40px; padding-top: 40px; }
+        .header { text-align: center; border-bottom: 3px solid #2c5282; padding-bottom: 20px; margin-bottom: 30px; }
+        .company-name { font-size: 28px; font-weight: bold; color: #2c5282; margin-bottom: 5px; }
+        .company-tagline { font-size: 14px; color: #666; font-style: italic; }
+        .quote-title { font-size: 24px; font-weight: bold; text-align: center; margin: 30px 0; color: #2c5282; }
+        .customer-info { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .info-section { border: 1px solid #ddd; padding: 15px; border-radius: 4px; }
+        .info-section h3 { font-size: 16px; margin-bottom: 10px; color: #2c5282; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .system-overview { margin: 30px 0; padding: 20px; background: #f8f9fa; border-left: 4px solid #2c5282; }
+        .pricing-table { width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #ddd; }
+        .pricing-table th, .pricing-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .pricing-table th { background: #2c5282; color: white; font-weight: bold; }
+        .pricing-table tr:nth-child(even) { background: #f8f9fa; }
+        .total-row { background: #e8f4f8 !important; font-weight: bold; }
+        .control-group { margin-bottom: 20px; }
+        .control-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; font-size: 14px; }
+        .control-group input, .control-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        .generate-btn {
+            width: 100%; background: #2c5282; color: white; border: none; padding: 12px;
+            border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px;
+        }
+        .generate-btn:hover { background: #1a365d; }
+        .financial-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .metric-card { padding: 15px; border: 1px solid #ddd; border-radius: 4px; text-align: center; }
+        .metric-value { font-size: 24px; font-weight: bold; color: #2c5282; }
+        .metric-label { font-size: 12px; color: #666; margin-top: 5px; }
+        .terms-section { margin-top: 30px; }
+        .terms-section h3 { color: #2c5282; margin-bottom: 15px; font-size: 18px; }
+        .terms-section ul { list-style-type: disc; margin-left: 20px; }
+        .terms-section li { margin-bottom: 8px; line-height: 1.5; }
+        .environmental-section { background: #e8f5e8; padding: 20px; border-radius: 4px; margin: 20px 0; }
+        @media print {
+            .control-panel { display: none !important; }
+            .document-area { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .quotation-document { box-shadow: none !important; margin: 0 !important; padding: 15mm !important; max-width: none !important; width: 100% !important; }
+            .page-break { page-break-before: always !important; margin-top: 0 !important; padding-top: 20px !important; }
+            body { background: white !important; font-size: 12pt !important; line-height: 1.4 !important; }
+            .container { display: block !important; }
+        }
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .control-panel { position: relative; width: 100%; height: auto; order: 1; }
+            .document-area { max-width: 100%; order: 2; }
+            .customer-info, .financial-metrics { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="document-area">
+            <div class="quotation-document">
+                <div class="header">
+                    <div class="company-name">ΗΛΙΟΣ ΦΩΤΟΒΟΛΤΑΪΚΕΣ ΛΥΣΕΙΣ</div>
+                    <div class="company-tagline">Τροφοδοτώντας το Μέλλον σας με Καθαρή Ενέργεια</div>
+                </div>
+
+```
+            <div class="quote-title">ΠΡΟΣΦΟΡΑ ΦΩΤΟΒΟΛΤΑΪΚΟΥ ΣΥΣΤΗΜΑΤΟΣ</div>
+
+            <div class="customer-info">
+                <div class="info-section">
+                    <h3>Στοιχεία Πελάτη</h3>
+                    <p><strong>Όνομα:</strong> <span id="display-customer-name">Ιωάννης Παπαδόπουλος</span></p>
+                    <p><strong>Διεύθυνση:</strong> <span id="display-customer-address">Μαρίνου Αντύπα 123, Καλαμάτα, Ελλάδα</span></p>
+                    <p><strong>Ημερομηνία:</strong> 28 Ιουνίου 2025</p>
+                    <p><strong>Ισχύς Προσφοράς μέχρι:</strong> 28 Ιουλίου 2025</p>
+                </div>
+                <div class="info-section">
+                    <h3>Σύνοψη Συστήματος</h3>
+                    <p><strong>Συνολική Ισχύς:</strong> <span id="total-capacity">2,18 kW</span></p>
+                    <p><strong>Τύπος Πάνελ:</strong> <span id="panel-type-display">JKM435N-54HL4R-V</span></p>
+                    <p><strong>Αριθμός Πάνελ:</strong> <span id="total-panels">5</span></p>
+                    <p><strong>Μετατροπέας:</strong> <span id="inverter-display">EM5500-48L</span></p>
+                    <p><strong>Χωρητικότητα Μπαταρίας:</strong> <span id="battery-display">15,5 kWh</span></p>
+                </div>
+            </div>
+
+            <div class="system-overview">
+                <h3>Επισκόπηση Συστήματος</h3>
+                <p>Το φωτοβολταϊκό σύστημα έχει σχεδιαστεί ειδικά για την ιδιοκτησία σας στην Καλαμάτα, αξιοποιώντας φωτοβολταϊκά πάνελ υψηλής απόδοσης και προηγμένη τεχνολογία μετατροπέα. Το σύστημα περιλαμβάνει αποθήκευση ενέργειας σε μπαταρίες για ενεργειακή ανεξαρτησία και θα παρέχει καθαρή, ανανεώσιμη ενέργεια για πολλά χρόνια.</p>
+                
+                <div style="margin-top: 15px;">
+                    <strong>Διαμόρφωση Συστήματος:</strong>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><span id="series-count">1</span> πάνελ σε σειρά × <span id="parallel-count">5</span> γραμμές παράλληλα</li>
+                        <li>Τάση Συστήματος: <span id="system-voltage">435V</span></li>
+                        <li>Ρεύμα Συστήματος: <span id="system-current">66,75A</span></li>
+                        <li>Ετήσια Παραγωγή Ενέργειας: <span id="annual-production">3.900 kWh</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <table class="pricing-table">
+                <thead>
+                    <tr><th>Είδος</th><th>Περιγραφή</th><th>Ποσότητα</th><th>Τιμή Μονάδας</th><th>Σύνολο</th></tr>
+                </thead>
+                <tbody id="pricing-table-body">
+                    <!-- Θα συμπληρωθεί από JavaScript -->
+                </tbody>
+            </table>
+
+            <div class="page-break">
+                <div class="quote-title">ΤΕΧΝΙΚΕΣ ΠΡΟΔΙΑΓΡΑΦΕΣ & ΑΝΑΛΥΣΗ</div>
+
+                <div class="info-section">
+                    <h3>Προδιαγραφές Πάνελ</h3>
+                    <div id="panel-specs">
+                        <p><strong>Μοντέλο:</strong> JKM435N-54HL4R-V</p>
+                        <p><strong>Ισχύς Εξόδου:</strong> 435W ανά πάνελ</p>
+                        <p><strong>Απόδοση:</strong> 21,77%</p>
+                        <p><strong>Διαστάσεις:</strong> 1,134m × 1,762m</p>
+                        <p><strong>Μέγιστη Τάση Ισχύος:</strong> 32,59V</p>
+                        <p><strong>Μέγιστο Ρεύμα Ισχύος:</strong> 13,35A</p>
+                    </div>
+                </div>
+
+                <div class="info-section" style="margin-top: 20px;">
+                    <h3>Προδιαγραφές Μετατροπέα</h3>
+                    <div id="inverter-specs">
+                        <p><strong>Μοντέλο:</strong> EM5500-48L</p>
+                        <p><strong>Ισχύς Εξόδου:</strong> 5500W</p>
+                        <p><strong>Τάση Συστήματος:</strong> 48V</p>
+                        <p><strong>Εύρος MPPT:</strong> 120-500V</p>
+                    </div>
+                </div>
+
+                <div class="financial-metrics">
+                    <div class="metric-card">
+                        <div class="metric-value" id="payback-period">4,0</div>
+                        <div class="metric-label">Έτη Περιόδου Απόσβεσης</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="annual-savings">€820</div>
+                        <div class="metric-label">Ετήσια Εξοικονόμηση</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="lifetime-savings">€17.182</div>
+                        <div class="metric-label">Συνολική Εξοικονόμηση 25ετίας</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="roi-percentage">24,7%</div>
+                        <div class="metric-label">Ετήσια Απόδοση Επένδυσης</div>
+                    </div>
+                </div>
+
+                <div class="environmental-section">
+                    <h3>Περιβαλλοντικό Αποτύπωμα</h3>
+                    <div class="financial-metrics">
+                        <div class="metric-card">
+                            <div class="metric-value" id="co2-reduction">1,95</div>
+                            <div class="metric-label">Τόνοι CO₂ Εξοικονόμησης/Έτος</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" id="tree-equivalent">45</div>
+                            <div class="metric-label">Ισοδύναμο Φυτεμένων Δέντρων</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 15px; text-align: center; font-style: italic;">
+                        Σε 25 χρόνια, το σύστημα θα εξοικονομήσει <span id="lifetime-co2">48,8</span> τόνους CO₂, 
+                        ισοδύναμο με τη φύτευση <span id="lifetime-trees">1.125</span> δέντρων.
+                    </p>
+                </div>
+
+                <div class="info-section" style="margin-top: 20px;">
+                    <h3>Μηνιαία Πρόβλεψη Παραγωγής Ενέργειας</h3>
+                    <table class="pricing-table">
+                        <thead>
+                            <tr><th>Μήνας</th><th>Ηλιακή Ακτινοβολία (kWh/m²/ημέρα)</th><th>Εκτιμώμενη Παραγωγή (kWh)</th></tr>
+                        </thead>
+                        <tbody id="monthly-production">
+                            <!-- Θα συμπληρωθεί από JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="page-break">
+                <div class="quote-title">ΟΡΟΙ & ΠΡΟΫΠΟΘΕΣΕΙΣ</div>
+
+                <div class="terms-section">
+                    <h3>Όροι Εγκατάστασης</h3>
+                    <ul>
+                        <li>Χρόνος εγκατάστασης: <span id="labor-hours">18,4</span> ώρες (2-3 εργάσιμες ημέρες)</li>
+                        <li>Όλες οι ηλεκτρολογικές εργασίες εκτελούνται από πιστοποιημένους ηλεκτρολόγους</li>
+                        <li>Η εγκατάσταση περιλαμβάνει υλικά στήριξης, ηλεκτρικές συνδέσεις και θέση σε λειτουργία</li>
+                        <li>Επιτόπια επίσκεψη και στατική μελέτη περιλαμβάνονται στην τιμή</li>
+                        <li>Παρακολούθηση συστήματος και επαλήθευση απόδοσης περιλαμβάνονται</li>
+                    </ul>
+
+                    <h3>Όροι Πληρωμής</h3>
+                    <ul>
+                        <li>Προκαταβολή 50% απαιτείται κατά την υπογραφή της σύμβασης</li>
+                        <li>25% κατά την παράδοση του εξοπλισμού</li>
+                        <li>25% τελική πληρωμή κατά τη θέση σε λειτουργία του συστήματος</li>
+                        <li>Όλες οι τιμές περιλαμβάνουν Φ.Π.Α. όπου εφαρμόζεται</li>
+                        <li>Η προσφορά ισχύει για 30 ημέρες από την ημερομηνία έκδοσης</li>
+                    </ul>
+
+                    <h3>Εγγυήσεις</h3>
+                    <ul>
+                        <li><strong>Φωτοβολταϊκά Πάνελ:</strong> 25ετής εγγύηση απόδοσης (80% ισχύς)</li>
+                        <li><strong>Μετατροπέας:</strong> 10ετής εγγύηση κατασκευαστή</li>
+                        <li><strong>Σύστημα Μπαταριών:</strong> 10ετής εγγύηση/10.000 κύκλων</li>
+                        <li><strong>Εγκατάσταση:</strong> 5ετής εγγύηση εργασιών</li>
+                        <li><strong>Παρακολούθηση:</strong> 5ετής παρακολούθηση συστήματος</li>
+                    </ul>
+
+                    <h3>Πρόσθετες Πληροφορίες</h3>
+                    <ul>
+                        <li>Άδειες και υποστήριξη σύνδεσης στο δίκτυο περιλαμβάνονται</li>
+                        <li>Ετήσια υπηρεσία συντήρησης διαθέσιμη (προαιρετικά)</li>
+                        <li>Το σύστημα είναι σχεδιασμένο για λειτουργική ζωή 25+ ετών</li>
+                        <li>Συμβατότητα με net metering όπου εφαρμόζεται</li>
+                        <li>Παρέχεται επαγγελματικός φάκελος τεκμηρίωσης συστήματος</li>
+                    </ul>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 50px; padding-top: 30px; border-top: 1px solid #ddd;">
+                    <div style="text-align: center;">
+                        <div style="border-bottom: 1px solid #333; margin-bottom: 10px; height: 40px;"></div>
+                        <p><strong>Υπογραφή Πελάτη</strong></p>
+                        <p>Ημερομηνία: _______________</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="border-bottom: 1px solid #333; margin-bottom: 10px; height: 40px;"></div>
+                        <p><strong>Ήλιος Φωτοβολταϊκές Λύσεις</strong></p>
+                        <p>Ημερομηνία: _______________</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+                    <p><strong>Στοιχεία Επικοινωνίας</strong></p>
+                    <p>Email: info@heliossolar.gr | Τηλέφωνο: +30 27210 12345</p>
+                    <p>Διεύθυνση: Ηλιακή 123, Καλαμάτα 24100, Ελλάδα</p>
+                    <p style="margin-top: 10px; font-style: italic;">Σας ευχαριστούμε που επιλέξατε την Ήλιος Φωτοβολταϊκές Λύσεις!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <h3 style="color: #2c5282; margin-bottom: 20px; text-align: center;">Διαμόρφωση Συστήματος</h3>
+        
+        <div class="control-group">
+            <label>Όνομα Πελάτη:</label>
+            <input type="text" id="customer-name" value="Ιωάννης Παπαδόπουλος" oninput="updateAll()">
+        </div>
+
+        <div class="control-group">
+            <label>Διεύθυνση Πελάτη:</label>
+            <input type="text" id="customer-address" value="Μαρίνου Αντύπα 123, Καλαμάτα, Ελλάδα" oninput="updateAll()">
+        </div>
+
+        <div class="control-group">
+            <label>Τύπος Πάνελ:</label>
+            <select id="panel-type" onchange="updateAll()">
+                <option value="JKM435N-54HL4R-V">JKM435N-54HL4R-V (435W)</option>
+                <option value="Longi LR5-54HPB-410M">Longi LR5-54HPB-410M (410W)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Πάνελ σε Σειρά (1-20):</label>
+            <input type="number" id="panels-series" min="1" max="20" value="1" oninput="updateAll()">
+        </div>
+
+        <div class="control-group">
+            <label>Γραμμές Παράλληλα (1-10):</label>
+            <input type="number" id="strings-parallel" min="1" max="10" value="5" oninput="updateAll()">
+        </div>
+
+        <div class="control-group">
+            <label>Τύπος Μετατροπέα:</label>
+            <select id="inverter-type" onchange="updateBatteryOptions()">
+                <option value="EM5500-48L">EM5500-48L (5500W, 48V)</option>
+                <option value="EM3500-24L">EM3500-24L (3500W, 24V)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Χωρητικότητα Μπαταρίας:</label>
+            <select id="battery-capacity" onchange="updateAll()">
+                <option value="15.5">15,5 kWh (16 στοιχεία, 48V)</option>
+                <option value="31.0">31,0 kWh (32 στοιχεία, 48V)</option>
+                <option value="46.5">46,5 kWh (48 στοιχεία, 48V)</option>
+            </select>
+        </div>
+
+        <button class="generate-btn" onclick="generatePDF()">Δημιουργία Προσφοράς PDF</button>
+        
+        <div style="margin-top: 10px; text-align: center; font-size: 12px; color: #666;">
+            Εναλλακτικά: Πατήστε <strong>Ctrl+P</strong> (Windows) ή <strong>Cmd+P</strong> (Mac)
+        </div>
+
+        <div style="margin: 20px 0; padding: 15px; background: #e8f4f8; border-radius: 4px; border-left: 4px solid #2c5282;">
+            <h4 style="color: #2c5282; margin-bottom: 15px;">Ανάλυση Ενεργειακών Αναγκών</h4>
+            
+            <div class="control-group">
+                <label>Μοντέλο Αντλίας Θερμότητας:</label>
+                <select id="heatpump-model">
+                    <option value="AWH-M120/5R1">AWH-M120/5R1 (0.75kW θέρμανση, 0.85kW ψύξη)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Τετραγωνικά Μέτρα Σπιτιού:</label>
+                <input type="number" id="house-sqm" min="50" max="500" value="120" oninput="updateEnergyAnalysis()">
+            </div>
+
+            <button class="generate-btn" onclick="showEnergyPlot()" style="background: #28a745; margin-top: 10px;">
+                📊 Εμφάνιση Ανάλυσης Ενέργειας
+            </button>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; font-size: 12px;">
+            <strong>Σύνοψη Συστήματος:</strong><br>
+            Συνολικά Πάνελ: <span id="summary-panels">5</span><br>
+            Συνολική Ισχύς: <span id="summary-capacity">2,18 kW</span><br>
+            Συνολικό Κόστος: <span id="summary-cost">€3.318</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const panels = {
+        'JKM435N-54HL4R-V': { power: 435, efficiency: 21.77, width: 1.134, height: 1.762, maxVoltage: 32.59, maxCurrent: 13.35, price: 95 },
+        'Longi LR5-54HPB-410M': { power: 410, efficiency: 21.0, width: 1.134, height: 1.722, maxVoltage: 31.25, maxCurrent: 13.12, price: 105 }
+    };
+
+    const inverters = {
+        'EM5500-48L': { power: 5500, voltage: 48, mpptMin: 120, mpptMax: 500, price: 499 },
+        'EM3500-24L': { power: 3500, voltage: 24, mpptMin: 30, mpptMax: 160, price: 339 }
+    };
+
+    function updateBatteryOptions() {
+        const inverterType = document.getElementById('inverter-type').value;
+        const batterySelect = document.getElementById('battery-capacity');
+        
+        if (inverterType === 'EM5500-48L') {
+            batterySelect.innerHTML = `
+                <option value="15.5">15,5 kWh (16 στοιχεία, 48V)</option>
+                <option value="31.0">31,0 kWh (32 στοιχεία, 48V)</option>
+                <option value="46.5">46,5 kWh (48 στοιχεία, 48V)</option>
+            `;
+        } else {
+            batterySelect.innerHTML = `
+                <option value="7.75">7,75 kWh (8 στοιχεία, 24V)</option>
+                <option value="15.5">15,5 kWh (16 στοιχεία, 24V)</option>
+                <option value="23.25">23,25 kWh (24 στοιχεία, 24V)</option>
+            `;
+        }
+        updateAll();
+    }
+
+    function updateAll() {
+        const panelType = document.getElementById('panel-type').value;
+        const seriesCount = parseInt(document.getElementById('panels-series').value) || 1;
+        const parallelCount = parseInt(document.getElementById('strings-parallel').value) || 1;
+        const inverterType = document.getElementById('inverter-type').value;
+        const batteryCapacity = parseFloat(document.getElementById('battery-capacity').value) || 15.5;
+        const customerName = document.getElementById('customer-name').value;
+        const customerAddress = document.getElementById('customer-address').value;
+
+        const panel = panels[panelType];
+        const inverter = inverters[inverterType];
+
+        const totalPanels = seriesCount * parallelCount;
+        const totalCapacity = (totalPanels * panel.power) / 1000;
+        const systemVoltage = seriesCount * panel.maxVoltage;
+        const systemCurrent = parallelCount * panel.maxCurrent;
+
+        const panelArea = panel.width * panel.height;
+        const totalArea = totalPanels * panelArea;
+        const annualProduction = Math.round(totalArea * 4.9 * 365 * (panel.efficiency / 100));
+
+        const panelCost = totalPanels * panel.price;
+        const panelBaseCost = totalPanels * 50;
+        const inverterCost = inverter.price;
+        
+        let batteryCells = inverterType === 'EM5500-48L' ? 
+            Math.round((batteryCapacity / 15.5) * 16) : 
+            Math.round((batteryCapacity / 7.75) * 8);
+        const batteryCost = batteryCells * 110 + 150;
+
+        const laborHours = Math.max(15, Math.min(25, 15 + (totalPanels - 3) * 1.2));
+        const laborCost = Math.round(laborHours * 10);
+        const totalCost = panelCost + panelBaseCost + inverterCost + batteryCost + laborCost;
+
+        const annualSavings = Math.round(annualProduction * 0.21);
+        const paybackPeriod = (totalCost / annualSavings).toFixed(1);
+        const lifetimeSavings = Math.round((annualSavings * 25) - totalCost);
+        const roiPercentage = ((annualSavings / totalCost) * 100).toFixed(1);
+
+        const annualCO2Reduction = (annualProduction * 0.5 / 1000).toFixed(2);
+        const treeEquivalent = Math.round(annualCO2Reduction * 23);
+
+        // Update display elements
+        document.getElementById('display-customer-name').textContent = customerName;
+        document.getElementById('display-customer-address').textContent = customerAddress;
+        document.getElementById('total-capacity').textContent = totalCapacity.toFixed(2) + ' kW';
+        document.getElementById('panel-type-display').textContent = panelType;
+        document.getElementById('total-panels').textContent = totalPanels;
+        document.getElementById('inverter-display').textContent = inverterType;
+        document.getElementById('battery-display').textContent = batteryCapacity + ' kWh';
+        document.getElementById('series-count').textContent = seriesCount;
+        document.getElementById('parallel-count').textContent = parallelCount;
+        document.getElementById('system-voltage').textContent = systemVoltage.toFixed(0) + 'V';
+        document.getElementById('system-current').textContent = systemCurrent.toFixed(2) + 'A';
+        document.getElementById('annual-production').textContent = annualProduction.toLocaleString() + ' kWh';
+
+        // Update pricing table
+        document.getElementById('pricing-table-body').innerHTML = `
+            <tr><td>Φωτοβολταϊκά Πάνελ</td><td>${panelType} (${panel.power}W έκαστο)</td><td>${totalPanels}</td><td>€${panel.price}</td><td>€${panelCost}</td></tr>
+            <tr><td>Βάσεις & Στήριξη Πάνελ</td><td>Υλικά στήριξης και βάσεις</td><td>${totalPanels}</td><td>€50</td><td>€${panelBaseCost}</td></tr>
+            <tr><td>Μετατροπέας</td><td>${inverterType} (${inverter.power}W, ${inverter.voltage}V)</td><td>1</td><td>€${inverter.price}</td><td>€${inverterCost}</td></tr>
+            <tr><td>Σύστημα Μπαταριών</td><td>${batteryCapacity} kWh (${batteryCells} στοιχεία + BMS)</td><td>1</td><td>€${batteryCost}</td><td>€${batteryCost}</td></tr>
+            <tr><td>Εργασίες Εγκατάστασης</td><td>Επαγγελματική εγκατάσταση (${laborHours.toFixed(1)} ώρες)</td><td>1</td><td>€${laborCost}</td><td>€${laborCost}</td></tr>
+            <tr class="total-row"><td colspan="4"><strong>ΣΥΝΟΛΙΚΟ ΚΟΣΤΟΣ ΣΥΣΤΗΜΑΤΟΣ</strong></td><td><strong>€${totalCost}</strong></td></tr>
+        `;
+
+        // Update specs
+        document.getElementById('panel-specs').innerHTML = `
+            <p><strong>Μοντέλο:</strong> ${panelType}</p>
+            <p><strong>Ισχύς Εξόδου:</strong> ${panel.power}W ανά πάνελ</p>
+            <p><strong>Απόδοση:</strong> ${panel.efficiency}%</p>
+            <p><strong>Διαστάσεις:</strong> ${panel.width}m × ${panel.height}m</p>
+            <p><strong>Μέγιστη Τάση Ισχύος:</strong> ${panel.maxVoltage}V</p>
+            <p><strong>Μέγιστο Ρεύμα Ισχύος:</strong> ${panel.maxCurrent}A</p>
+        `;
+
+        document.getElementById('inverter-specs').innerHTML = `
+            <p><strong>Μοντέλο:</strong> ${inverterType}</p>
+            <p><strong>Ισχύς Εξόδου:</strong> ${inverter.power}W</p>
+            <p><strong>Τάση Συστήματος:</strong> ${inverter.voltage}V</p>
+            <p><strong>Εύρος MPPT:</strong> ${inverter.mpptMin}-${inverter.mpptMax}V</p>
+        `;
+
+        // Update financial metrics
+        document.getElementById('payback-period').textContent = paybackPeriod;
+        document.getElementById('annual-savings').textContent = '€' + annualSavings.toLocaleString();
+        document.getElementById('lifetime-savings').textContent = '€' + lifetimeSavings.toLocaleString();
+        document.getElementById('roi-percentage').textContent = roiPercentage + '%';
+        document.getElementById('co2-reduction').textContent = annualCO2Reduction;
+        document.getElementById('tree-equivalent').textContent = treeEquivalent;
+        document.getElementById('lifetime-co2').textContent = (annualCO2Reduction * 25).toFixed(1);
+        document.getElementById('lifetime-trees').textContent = Math.round(treeEquivalent * 25);
+        document.getElementById('labor-hours').textContent = laborHours.toFixed(1);
+
+        // Update summary
+        document.getElementById('summary-panels').textContent = totalPanels;
+        document.getElementById('summary-capacity').textContent = totalCapacity.toFixed(2) + ' kW';
+        document.getElementById('summary-cost').textContent = '€' + totalCost.toLocaleString();
+
+        // Update monthly production
+        updateMonthlyProduction(totalArea, panel.efficiency);
+    }
+
+    function updateMonthlyProduction(totalArea, efficiency) {
+        const monthlyIrradiance = [2.5, 3.3, 4.7, 6.1, 7.1, 7.9, 7.9, 7.0, 5.6, 4.0, 2.7, 2.2];
+        const monthNames = ['Ιαν', 'Φεβ', 'Μάρ', 'Απρ', 'Μάι', 'Ιούν', 'Ιούλ', 'Αύγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        const monthlyTableBody = document.getElementById('monthly-production');
+        if (!monthlyTableBody) return;
+        
+        let html = '';
+        monthlyIrradiance.forEach((irradiance, index) => {
+            const monthlyProduction = Math.round(totalArea * irradiance * daysInMonth[index] * (efficiency / 100));
+            html += `
+                <tr>
+                    <td>${monthNames[index]}</td>
+                    <td>${irradiance}</td>
+                    <td>${monthlyProduction}</td>
+                </tr>
+            `;
+        });
+        monthlyTableBody.innerHTML = html;
+    }
+
+    function generatePDF() {
+        const btn = document.querySelector('.generate-btn');
+        const originalText = btn.textContent;
+        
+        try {
+            btn.textContent = 'Άνοιγμα Διαλόγου Εκτύπωσης...';
+            btn.style.background = '#28a745';
+            
+            if (window.print) {
+                window.print();
+            } else {
+                alert('Η λειτουργία εκτύπωσης δεν είναι διαθέσιμη. Παρακαλώ χρησιμοποιήστε Ctrl+P (Windows) ή Cmd+P (Mac) για εκτύπωση.');
+            }
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '#2c5282';
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Σφάλμα εκτύπωσης:', error);
+            alert('Αδυναμία ανοίγματος διαλόγου εκτύπωσης. Παρακαλώ χρησιμοποιήστε Ctrl+P (Windows) ή Cmd+P (Mac) για εκτύπωση.');
+            btn.textContent = originalText;
+            btn.style.background = '#2c5282';
+        }
+    }
+
+    function updateEnergyAnalysis() {
+        // Placeholder for energy analysis updates
+    }
+
+    function showEnergyPlot() {
+        try {
+            const panelType = document.getElementById('panel-type').value;
+            const seriesCount = parseInt(document.getElementById('panels-series').value) || 1;
+            const parallelCount = parseInt(document.getElementById('strings-parallel').value) || 1;
+            const batteryCapacity = parseFloat(document.getElementById('battery-capacity').value) || 15.5;
+            const houseSqm = parseInt(document.getElementById('house-sqm').value) || 120;
+
+            const panel = panels[panelType];
+            const totalPanels = seriesCount * parallelCount;
+            const totalArea = totalPanels * panel.width * panel.height;
+
+            // Kalamata climate data
+            const climate = [
+                {month: "Ιανουάριος", avgTemp: 10.4, days: 31},
+                {month: "Φεβρουάριος", avgTemp: 10.7, days: 28}, 
+                {month: "Μάρτιος", avgTemp: 12.1, days: 31},
+                {month: "Απρίλιος", avgTemp: 14.6, days: 30},
+                {month: "Μάιος", avgTemp: 18.4, days: 31},
+                {month: "Ιούνιος", avgTemp: 22.4, days: 30},
+                {month: "Ιούλιος", avgTemp: 24.7, days: 31},
+                {month: "Αύγουστος", avgTemp: 24.8, days: 31},
+                {month: "Σεπτέμβριος", avgTemp: 22.5, days: 30},
+                {month: "Οκτώβριος", avgTemp: 18.9, days: 31},
+                {month: "Νοέμβριος", avgTemp: 15.2, days: 30},
+                {month: "Δεκέμβριος", avgTemp: 12.0, days: 31}
+            ];
+
+            const solarIrradiance = [2.5, 3.3, 4.7, 6.1, 7.1, 7.9, 7.9, 7.0, 5.6, 4.0, 2.7, 2.2];
+            
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); z-index: 10000; display: flex; 
+                align-items: center; justify-content: center; padding: 20px;
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white; border-radius: 12px; max-width: 1000px; width: 100%; 
+                max-height: 90vh; overflow-y: auto; padding: 30px;
+            `;
+            
+            let tableHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #2c5282; padding-bottom: 15px;">
+                    <h2 style="color: #2c5282; margin: 0;">📊 Μηνιαία Ανάλυση Ενέργειας</h2>
+                    <button onclick="this.closest('div').parentElement.remove()" 
+                            style="background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-size: 16px; cursor: pointer;">✖</button>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
+                    <strong>Σύστημα:</strong> ${totalPanels} πάνελ × ${panel.power}W | 
+                    <strong>Μπαταρία:</strong> ${batteryCapacity} kWh | 
+                    <strong>Σπίτι:</strong> ${houseSqm} m² | 
+                    <strong>Στόχος:</strong> 21°C
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+                    <thead>
+                        <tr style="background: #2c5282; color: white;">
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Μήνας</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Μέση Θερμ.</th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Αντλία Θερμ.<br><span style="font-size: 11px;">(kWh/ημέρα)</span></th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Ηλιακή Παραγωγή<br><span style="font-size: 11px;">(kWh/μήνα)</span></th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Αποθήκευση<br><span style="font-size: 11px;">(kWh/μήνα)</span></th>
+                            <th style="padding: 12px; border: 1px solid #ddd;">Από Δίκτυο<br><span style="font-size: 11px;">(kWh/μήνα)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            let yearlyTotals = {
+                heatPumpTotal: 0,
+                solarTotal: 0,
+                batteryTotal: 0,
+                gridTotal: 0
+            };
+
+            climate.forEach((month, index) => {
+                // Calculate heat pump consumption
+                const tempDiff = Math.abs(month.avgTemp - 21);
+                let dailyHeatPumpConsumption;
+                
+                if (month.avgTemp < 21) {
+                    // Heating mode - more energy needed in cold
+                    dailyHeatPumpConsumption = (2 + tempDiff * 0.8) * (houseSqm / 100);
+                } else {
+                    // Cooling mode - less energy for mild cooling
+                    dailyHeatPumpConsumption = Math.max(0, (tempDiff - 1) * 0.6) * (houseSqm / 100);
+                }
+                
+                const monthlyHeatPumpConsumption = dailyHeatPumpConsumption * month.days;
+                
+                // Calculate solar production
+                const monthlySolarProduction = Math.round(totalArea * solarIrradiance[index] * month.days * (panel.efficiency / 100));
+                
+                // Calculate battery storage (what we can store from excess solar)
+                const excessSolar = Math.max(0, monthlySolarProduction - monthlyHeatPumpConsumption);
+                const maxBatteryStorage = batteryCapacity * 15; // Assume 15 cycles per month
+                const batteryStorage = Math.min(excessSolar, maxBatteryStorage);
+                
+                // Calculate grid usage (shortfall after solar + stored energy)
+                const shortfall = Math.max(0, monthlyHeatPumpConsumption - monthlySolarProduction);
+                const gridUsage = Math.max(0, shortfall - batteryStorage);
+                
+                // Add to yearly totals
+                yearlyTotals.heatPumpTotal += monthlyHeatPumpConsumption;
+                yearlyTotals.solarTotal += monthlySolarProduction;
+                yearlyTotals.batteryTotal += batteryStorage;
+                yearlyTotals.gridTotal += gridUsage;
+                
+                tableHTML += `
+                    <tr style="background: ${index % 2 === 0 ? '#f8f9fa' : 'white'};">
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${month.month}</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">${month.avgTemp.toFixed(1)}°C</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: black; font-weight: bold;">
+                            ${dailyHeatPumpConsumption.toFixed(1)} kWh
+                            <div style="font-size: 11px; color: #666;">(${monthlyHeatPumpConsumption.toFixed(0)} kWh/μήνα)</div>
+                        </td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #ff8c00; font-weight: bold;">
+                            ${monthlySolarProduction} kWh
+                        </td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #28a745; font-weight: bold;">
+                            ${batteryStorage.toFixed(0)} kWh
+                        </td>
+                        <td style="padding: 10px; border: 1px solid #ddd; text-align: center; color: #dc3545; font-weight: bold;">
+                            ${gridUsage.toFixed(0)} kWh
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Calculate percentages for overview
+            const solarCoverage = Math.round((yearlyTotals.solarTotal / yearlyTotals.heatPumpTotal) * 100);
+            const batteryCoverage = Math.round((yearlyTotals.batteryTotal / yearlyTotals.heatPumpTotal) * 100);
+            const gridDependency = Math.round((yearlyTotals.gridTotal / yearlyTotals.heatPumpTotal) * 100);
+            const totalSavings = Math.round((yearlyTotals.solarTotal + yearlyTotals.batteryTotal) * 0.21);
+            const gridCost = Math.round(yearlyTotals.gridTotal * 0.21);
+
+            tableHTML += `
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin-bottom: 20px; text-align: center;">📈 Ετήσια Επισκόπηση</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; text-align: center;">
+                        <div>
+                            <div style="font-size: 28px; font-weight: bold; color: black;">${yearlyTotals.heatPumpTotal.toFixed(0)}</div>
+                            <div style="font-size: 14px; opacity: 0.9;">Συνολική Κατανάλωση kWh</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 28px; font-weight: bold; color: #ffd700;">${yearlyTotals.solarTotal.toFixed(0)}</div>
+                            <div style="font-size: 14px; opacity: 0.9;">Ηλιακή Παραγωγή kWh</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 28px; font-weight: bold; color: #90ee90;">${solarCoverage}%</div>
+                            <div style="font-size: 14px; opacity: 0.9;">Κάλυψη από Ηλιακά</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 28px; font-weight: bold; color: #ffb6c1;">€${totalSavings}</div>
+                            <div style="font-size: 14px; opacity: 0.9;">Ετήσια Εξοικονόμηση</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 28px; font-weight: bold; color: #ff6b6b;">€${gridCost}</div>
+                            <div style="font-size: 14px; opacity: 0.9;">Κόστος Δικτύου</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 28px; font-weight: bold; color: ${gridDependency < 20 ? '#90ee90' : gridDependency < 50 ? '#ffd700' : '#ff6b6b'};">${gridDependency}%</div>
+                            <div style="font-size: 14px; opacity: 0.9;">Εξάρτηση από Δίκτυο</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 15px; background: #e8f5e8; border-radius: 8px; font-size: 13px; color: #2d5016;">
+                    <strong>💡 Επεξήγηση Χρωμάτων:</strong><br>
+                    <span style="color: black; font-weight: bold;">Μαύρο:</span> Ημερήσια κατανάλωση αντλίας θερμότητας για 21°C | 
+                    <span style="color: #ff8c00; font-weight: bold;">Πορτοκαλί:</span> Μηνιαία ηλιακή παραγωγή | 
+                    <span style="color: #28a745; font-weight: bold;">Πράσινο:</span> Ενέργεια αποθηκευμένη σε μπαταρίες | 
+                    <span style="color: #dc3545; font-weight: bold;">Κόκκινο:</span> Ενέργεια από δίκτυο ΔΕΗ
+                </div>
+            `;
+            
+            content.innerHTML = tableHTML;
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+        } catch (error) {
+            console.error('Error in energy analysis:', error);
+            alert('Σφάλμα στην ανάλυση ενέργειας: ' + error.message);
+        }
+    }
+
+    window.onload = function() {
+        updateBatteryOptions();
+        updateAll();
+    };
+</script>
+```
+
+</body>
+</html>
